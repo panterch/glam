@@ -13,6 +13,9 @@ var templates = {
   5: handleHuman,
   P19: handleCity, // place of birth
   P20: handleCity, // place of death
+  P6: handleHuman, // head of gov
+  P190: handleCity, // sister city
+
 }
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
@@ -49,8 +52,8 @@ var discoverNextEntity = function(entity) {
     var claimContainer =  entity.claims[propId][0];
     var entityId = 'Q'+claimContainer.mainsnak.datavalue.value['numeric-id'];
     if(templates[propId]) {
-      if (_.contains(visited, parseInt(entityId))) {
-        console.log('not visiting already used entity', entityId, visited);
+      if (_.contains(visited, entityId)) {
+        console.log('not visiting already used entity', entityId);
       } else {
         return requestEntity(entityId, propId);
       }
@@ -60,8 +63,8 @@ var discoverNextEntity = function(entity) {
   });
 }
 
-function handleHuman(entity) {
-  var sentence = "("+entity.id+") ";
+function handleHuman(entity, propId) {
+  var sentence = "("+entity.id+"/"+propId+") ";
   if (entity.labels && entity.labels.de) {
     sentence = sentence + entity.labels.de.value;
   }
@@ -74,14 +77,14 @@ function handleHuman(entity) {
   console.log(sentence);
 }
 
-function handleCity(entity) {
-  handleHuman(entity);
+function handleCity(entity, propId) {
+  handleHuman(entity, propId);
 }
 
 var writeSentence = function(entity, propId) {
   var strategy = templates[propId];
   if (strategy) {
-    strategy(entity);
+    strategy(entity, propId);
   } else {
     console.log('No strategy for', instanceOf);
   }
