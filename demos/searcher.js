@@ -2,14 +2,17 @@
 
 var wdk = require('wikidata-sdk');
 var breq = require('bluereq');
-
+var _ = require('underscore');
+var visited = [];
 
 var query = process.argv[2];
 var url = wdk.searchEntities(query, 'de', 10);
 var initialSearchRequest = breq.get(url);
 
 var templates = {
-  5: handleHuman
+  5: handleHuman,
+  P19: handleCity, // place of birth
+  P20: handleCity, // place of death
 }
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
@@ -30,6 +33,7 @@ var entityIdRequest = claimRequest.then(function(response) {
 });
 
 var requestEntity = function(entityId) {
+  visited.push(entityId);
   var url = wdk.getEntities([entityId], 'de');
   breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
@@ -40,17 +44,18 @@ var requestEntity = function(entityId) {
 }
 
 var discoverNextEntity = function(entity) {
-  var claims = Object.keys(entity.claims)
-  claims.forEach(function(claim) {
-    var claimContainer =  entity.claims[claim][0];
-    var instanceId =claimContainer.mainsnak.datavalue.value['numeric-id'];
-    var entityId = claimContainer.id.split('$')[0];
-    if(templates[instanceId]) {
-      if (entityId != entity.id) {
+  var propIds = Object.keys(entity.claims)
+  propIds.forEach(function(propId) {
+    var claimContainer =  entity.claims[propId][0];
+    var entityId = 'Q'+claimContainer.mainsnak.datavalue.value['numeric-id'];
+    if(templates[propId]) {
+      if (_.contains(visited, parseInt(entityId))) {
+        console.log('not visiting already used entity', entityId, visited);
+      } else {
         return requestEntity(entityId);
       }
     } else {
-      console.log('dunno what to do with instance ', instanceId, 'entityId', entityId);
+      // console.log('dunno what to do with instance ', propId, 'entityId', entityId);
     }
   });
 }
@@ -66,6 +71,12 @@ function handleHuman(entity) {
       entity.descriptions.de.value
   }
   sentence = sentence + '.';
+  console.log(sentence);
+}
+
+function handleCity(entity) {
+  var sentence = "("+entity.id+")";
+  sentence = sentence + entity.descriptions.de.value;
   console.log(sentence);
 }
 
