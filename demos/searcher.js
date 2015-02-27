@@ -9,10 +9,10 @@ var url = wdk.searchEntities(query, 'de', 10);
 
 request(url, function (error, response, body) {
   if (!error && response.statusCode == 200) {
-    var result = JSON.parse(body);
-    console.log(query+' ist '+result.search[0].description+'.');
+    var result = JSON.parse(body).search[0];
+    console.log(query+' ist '+result.description+'.');
 
-    var url = wdk.getReverseClaims('P19', 'Q70');
+    var url = wdk.getReverseClaims('P19', result.id);
     request(url, function (error, response, body) {
       if (!error && response.statusCode == 200) {
         result = JSON.parse(body);
@@ -24,9 +24,9 @@ request(url, function (error, response, body) {
             result = JSON.parse(body).entities['Q'+personId];
             var person = 'Dort lebte ' +
               result.labels.de.value +
-              ' ein ' +
+              ' ein(e) ' +
               result.descriptions.de.value +
-              '. Ende.';
+              '.\nEnde.';
             console.log(person);
           }
         });
