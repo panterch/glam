@@ -8,6 +8,10 @@ var query = process.argv[2];
 var url = wdk.searchEntities(query, 'de', 10);
 var initialSearchRequest = breq.get(url);
 
+var templates = {
+  5: handleHuman
+}
+
 var initialSearchResults = initialSearchRequest.then(function(response) {
   var result = response.body.search[0];
   console.log(query+' ist '+result.description+'.');
@@ -21,45 +25,51 @@ var claimRequest = initialSearchResults.then( function(wdId) {
 
 var entityIdRequest = claimRequest.then(function(response) {
   var items = response.body.items;
-  // return items[Math.floor(Math.random()*items.length)];
-  items.forEach(function(entityId) {
-    requestEntity(entityId);
-  });
+  var entityId = items[Math.floor(Math.random()*items.length)];
+  requestEntity(entityId);
 });
 
 var requestEntity = function(entityId) {
   var url = wdk.getEntities([entityId], 'de');
   breq.get(url).then(function(response) {
-    brancher(response);
+    var firstEntityKey = Object.keys(response.body.entities)[0];
+    var firstEntity = response.body.entities[firstEntityKey];
+    writeSentence(firstEntity);
+    discoverNextEntity(firstEntity);
   });
 }
 
-var handleHuman = function(response) {
-  var personId = Object.keys(response.body.entities)[0];
-  var result = response.body.entities[personId];
+var discoverNextEntity = function(entity) {
+  var claims = Object.keys(entity.claims)
+  claims.forEach(function(claim) {
+    var claimContainer =  entity.claims[claim][0];
+    var instanceId =claimContainer.mainsnak.datavalue.value['numeric-id'];
+    if(templates[instanceId]) {
+      var entityId = claimContainer.id.split('$')[0];
+      return requestEntity(entityId);
+    }
+  });
+}
+
+function handleHuman(entity) {
   var sentence = "Unbekannte Person";
-  if (result.labels && result.labels.de) {
-    sentence = result.labels.de.value;
+  if (entity.labels && entity.labels.de) {
+    sentence = entity.labels.de.value;
   }
-  if (result.descriptions && result.descriptions.de) {
+  if (entity.descriptions && entity.descriptions.de) {
     sentence = sentence +
       ' war/ist ein/e ' +
-      result.descriptions.de.value
+      entity.descriptions.de.value
   }
   sentence = sentence + '.';
   console.log(sentence);
 }
 
-var brancher = function(response) {
-  var strategies = {
-    5: handleHuman
-  }
-  var firstEntityKey = Object.keys(response.body.entities)[0];
-  var firstEntity = response.body.entities[firstEntityKey];
-  var instanceOf = firstEntity.claims['P31'][0].mainsnak.datavalue.value['numeric-id'];
-  var strategy = strategies[instanceOf];
+var writeSentence = function(entity) {
+  var instanceOf = entity.claims['P31'][0].mainsnak.datavalue.value['numeric-id'];
+  var strategy = templates[instanceOf];
   if (strategy) {
-    strategy(response);
+    strategy(entity);
   } else {
     console.log('No strategy for', instanceOf);
   }
