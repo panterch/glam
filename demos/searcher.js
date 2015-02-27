@@ -3,11 +3,11 @@
 var wdk = require('wikidata-sdk');
 var breq = require('bluereq');
 var _ = require('underscore');
-var visited = [];
 
 var query = process.argv[2];
 var url = wdk.searchEntities(query, 'de', 10);
 var initialSearchRequest = breq.get(url);
+var visited = []
 
 var templates = {
   5: handleHuman,
@@ -29,16 +29,16 @@ var claimRequest = initialSearchResults.then( function(wdId) {
 var entityIdRequest = claimRequest.then(function(response) {
   var items = response.body.items;
   var entityId = items[Math.floor(Math.random()*items.length)];
-  requestEntity(entityId);
+  requestEntity(entityId, 'P19');
 });
 
-var requestEntity = function(entityId) {
+var requestEntity = function(entityId, propId) {
   visited.push(entityId);
   var url = wdk.getEntities([entityId], 'de');
   breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
-    writeSentence(firstEntity);
+    writeSentence(firstEntity, propId);
     discoverNextEntity(firstEntity);
   });
 }
@@ -52,7 +52,7 @@ var discoverNextEntity = function(entity) {
       if (_.contains(visited, parseInt(entityId))) {
         console.log('not visiting already used entity', entityId, visited);
       } else {
-        return requestEntity(entityId);
+        return requestEntity(entityId, propId);
       }
     } else {
       // console.log('dunno what to do with instance ', propId, 'entityId', entityId);
@@ -75,14 +75,11 @@ function handleHuman(entity) {
 }
 
 function handleCity(entity) {
-  var sentence = "("+entity.id+")";
-  sentence = sentence + entity.descriptions.de.value;
-  console.log(sentence);
+  handleHuman(entity);
 }
 
-var writeSentence = function(entity) {
-  var instanceOf = entity.claims['P31'][0].mainsnak.datavalue.value['numeric-id'];
-  var strategy = templates[instanceOf];
+var writeSentence = function(entity, propId) {
+  var strategy = templates[propId];
   if (strategy) {
     strategy(entity);
   } else {
