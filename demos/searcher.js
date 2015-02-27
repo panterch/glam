@@ -29,9 +29,11 @@ var personRequest = personIdRequest.then(function(personId) {
   return breq.get(url);
 });
 
-
 personRequest.then(function(response) {
 	brancher(response);
+});
+
+var handleHuman = function(response) {
   var personId = Object.keys(response.body.entities)[0];
   var result = response.body.entities[personId];
   var sentence = 'Dort lebte ' +
@@ -40,17 +42,14 @@ personRequest.then(function(response) {
     result.descriptions.de.value +
     '.\nEnde.';
   console.log(sentence);
-});
-
+}
 
 var brancher = function(response) {
-	var expression = response.body.entities[Object.keys(response.body.entities)].claims['P31'][0].mainsnak.datavalue.value['numeric-id'];
-	switch(expression){
-	case 5:
-    	// call human path
-		console.log('this is a human!');
-        break;
-    default:
-        // call other path 
-	}			
+  var strategies = {
+    5: handleHuman
+  }
+  var firstEntityKey = Object.keys(response.body.entities)[0];
+	var firstEntity = response.body.entities[firstEntityKey];
+  var instanceOf = firstEntity.claims['P31'][0].mainsnak.datavalue.value['numeric-id'];
+  strategies[instanceOf](response);
 }
