@@ -31,6 +31,7 @@ var personRequest = personIdRequest.then(function(personId) {
 
 
 personRequest.then(function(response) {
+	brancher(response);
   var personId = Object.keys(response.body.entities)[0];
   var result = response.body.entities[personId];
   var sentence = 'Dort lebte ' +
@@ -41,3 +42,15 @@ personRequest.then(function(response) {
   console.log(sentence);
 });
 
+
+var brancher = function(response) {
+	var expression = response.body.entities[Object.keys(response.body.entities)].claims['P31'][0].mainsnak.datavalue.value['numeric-id'];
+	switch(expression){
+	case 5:
+    	// call human path
+		console.log('this is a human!');
+        break;
+    default:
+        // call other path 
+	}			
+}
