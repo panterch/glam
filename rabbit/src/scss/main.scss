@@ -1,0 +1,86 @@
+@import '../../bower_components/bourbon/app/assets/stylesheets/bourbon';
+
+html {
+  height: 100%;
+}
+body {
+  font-family: Georgia;
+  font-size: 16px;
+  line-height: 1;
+
+  background-color: black;
+  color: white;
+}
+
+a {
+  text-decoration: underline;
+  color: white;
+}
+
+.slide {
+  width: 1920px;
+  height: 1080px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &[data-type="text"] {
+    font-size: 6em;
+
+    background-color: rgba(black, 0.90);
+    text-align: center;
+
+    -webkit-font-smoothing: antialiased;
+  }
+}
+.slide-container {
+}
+
+#input {
+  @include transition(all 0.2s linear);
+
+  @include position(absolute, 0px 0px auto 0px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: black;
+  max-height: 20%;
+
+  input {
+    @include transition(all 0.2s linear);
+
+    font-size: 2em;
+    outline: none;
+
+    padding: 5px;
+
+    background-color: transparent;
+    color: white;
+
+    border-style: solid;
+    border-width: 0 0 2px 0;
+    border-color: white;
+
+    text-align: center;
+
+    @include placeholder {
+      color: rgba(white, 0.2);
+    }
+
+    &:focus {
+
+    }
+  }
+
+  &.expanded {
+    min-height: 100%;
+
+    input {
+      font-size: 6em;
+      border-bottom-width: 5px;
+    }
+  }
+}
