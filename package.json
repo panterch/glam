@@ -18,6 +18,7 @@
   "homepage": "https://github.com/panterch/glam",
   "dependencies": {
     "wikidata-sdk": "0.0.2",
-    "request": "~2.53.0"
+    "request": "~2.53.0",
+    "bluereq": "~0.2.1"
   }
 }

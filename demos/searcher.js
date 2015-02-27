@@ -1,36 +1,43 @@
-"use strict;"
+"use strict";
 
-var wdk = require('wikidata-sdk')
-var request = require('request');
+var wdk = require('wikidata-sdk');
+var breq = require('bluereq');
 
 
 var query = process.argv[2];
 var url = wdk.searchEntities(query, 'de', 10);
+var initialSearchRequest = breq.get(url);
 
-request(url, function (error, response, body) {
-  if (!error && response.statusCode == 200) {
-    var result = JSON.parse(body).search[0];
-    console.log(query+' ist '+result.description+'.');
+var initialSearchResults = initialSearchRequest.then(function(response) {
+  var result = response.body.search[0];
+  console.log(query+' ist '+result.description+'.');
+  return result.id;
+})
 
-    var url = wdk.getReverseClaims('P19', result.id);
-    request(url, function (error, response, body) {
-      if (!error && response.statusCode == 200) {
-        result = JSON.parse(body);
-        personId = result.items[Math.floor(Math.random()*result.items.length)];
-
-        var url = wdk.getEntities([personId], 'de');
-        request(url, function (error, response, body) {
-          if (!error && response.statusCode == 200) {
-            result = JSON.parse(body).entities['Q'+personId];
-            var person = 'Dort lebte ' +
-              result.labels.de.value +
-              ' ein(e) ' +
-              result.descriptions.de.value +
-              '.\nEnde.';
-            console.log(person);
-          }
-        });
-      }
-    });
-  }
+var claimRequest = initialSearchResults.then( function(wdId) {
+  var url = wdk.getReverseClaims('P19', wdId);
+  return breq.get(url);
 });
+
+var personIdRequest = claimRequest.then( function(response) {
+  var items = response.body.items;
+  return items[Math.floor(Math.random()*items.length)];
+});
+
+var personRequest = personIdRequest.then(function(personId) {
+  var url = wdk.getEntities([personId], 'de');
+  return breq.get(url);
+});
+
+
+personRequest.then(function(response) {
+  var personId = Object.keys(response.body.entities)[0];
+  var result = response.body.entities[personId];
+  var sentence = 'Dort lebte ' +
+    result.labels.de.value +
+    ' ein(e) ' +
+    result.descriptions.de.value +
+    '.\nEnde.';
+  console.log(sentence);
+});
+
