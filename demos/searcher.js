@@ -44,17 +44,21 @@ var discoverNextEntity = function(entity) {
   claims.forEach(function(claim) {
     var claimContainer =  entity.claims[claim][0];
     var instanceId =claimContainer.mainsnak.datavalue.value['numeric-id'];
+    var entityId = claimContainer.id.split('$')[0];
     if(templates[instanceId]) {
-      var entityId = claimContainer.id.split('$')[0];
-      return requestEntity(entityId);
+      if (entityId != entity.id) {
+        return requestEntity(entityId);
+      }
+    } else {
+      console.log('dunno what to do with instance ', instanceId, 'entityId', entityId);
     }
   });
 }
 
 function handleHuman(entity) {
-  var sentence = "Unbekannte Person";
+  var sentence = "("+entity.id+") ";
   if (entity.labels && entity.labels.de) {
-    sentence = entity.labels.de.value;
+    sentence = sentence + entity.labels.de.value;
   }
   if (entity.descriptions && entity.descriptions.de) {
     sentence = sentence +
