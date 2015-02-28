@@ -19,5 +19,5 @@ This project is being developed as part of the [#GLAMhack](https://twitter.com/s
 
 Compile the javascript and bundle it for the browser to serve
 ```bash
-browserify demos/searcher.js -r wikidata-sdk:request:bluereq:underscore -o bundle.js --debug
+browserify demos/searcher.js -r wikidata-sdk:request:bluereq:bluebird:underscore -o rabbit/www/js/bundle.js --debug
 ```
