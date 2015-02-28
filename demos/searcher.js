@@ -34,7 +34,9 @@ var claimRequest = initialSearchResults.then( function(wdId) {
 var entityIdRequest = claimRequest.then(function(response) {
   var items = response.body.items;
   var entityId = items[Math.floor(Math.random()*items.length)];
-  requestEntity(entityId, 'P19');
+  var initialPromise = requestEntity(entityId, 'P19').then(function() {
+    console.log("story ends here");
+  });
 });
 
 var requestEntity = function(entityId, propId) {
@@ -45,12 +47,12 @@ var requestEntity = function(entityId, propId) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
     writeSentence(firstEntity, propId);
-    return discoverNextEntity(firstEntity);
+    return discoverNextEntities(firstEntity);
   });
 }
 
-var discoverNextEntity = function(source) {
-  debug('discovering next');
+var discoverNextEntities = function(source) {
+  // debug('discovering next');
   var propIds = Object.keys(source.claims)
   var ignored = []
   var candidates = []
@@ -74,11 +76,22 @@ var discoverNextEntity = function(source) {
     }
   }
 
-  debug('candidates', candidates);
-  for (var i=0; i<candidates.length; i++) {
-    var propId = candidates[i].propId;
-    var entityId = candidates[i].entityId;
-    return requestEntity(entityId, propId);
+  return tryNextEntities(candidates);
+}
+
+var tryNextEntities = function(candidates) {
+  // debug('candidates', candidates);
+  var candidate = candidates.shift();
+  if (candidate) {
+    return requestEntity(candidate.entityId, candidate.propId).then(function() {
+      if (candidates.length) {
+        return tryNextEntities(candidates);
+      } else {
+        // debug("end of path");
+      }
+    });
+  } else {
+    return null;
   }
 }
 
