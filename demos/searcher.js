@@ -10,14 +10,16 @@ var initialSearchRequest = breq.get(url);
 var visited = []
 var root = {}
 
-var templates = {
-  P6:   true, // head of gov
-  P7:   true, // brother
-  P9:   true, // sister
-  P26:  true, //spouse
-  P19:  true, // place of birth
-  P20:  true, // place of death
-  P190: true, // sister city
+var verbs = {
+  P6: "wird regiert von",
+  P7: "hat einen Bruder mit dem Namen",
+  P9: "hat eine Schwester mit dem Namen",
+  P19: "ist geboren in",
+  P20: "ist gestorben in",
+  P27: "ist Bürger(in) von",
+  P69: "besuchte die Universität von",
+  P106: "arbeitet als",
+  P190: "ist die Schwesterstadt von",
 }
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
@@ -66,7 +68,7 @@ var discoverNextEntities = function(path, source) {
       continue;
     }
     var entityId = 'Q'+claimContainer.mainsnak.datavalue.value['numeric-id'];
-    if(templates[propId]) {
+    if(verbs[propId]) {
       if (_.contains(visited, entityId)) {
         ignored.push(entityId+'(v)');
         // console.log('not visiting already used entity', entityId);
@@ -134,7 +136,7 @@ function writeSentence(sourceQ, pId, targetQ) {
 	  }
   }
 
-  var propertySentence = resolvePropertySentence(pId);
+  var propertySentence = verbs[pId];
 
   var targetName = "";
   if (targetQ.labels && targetQ.labels.de) {
@@ -149,39 +151,3 @@ function writeSentence(sourceQ, pId, targetQ) {
 }
 
 
-var resolvePropertySentence = function(pId) {
-	switch (pId) {
-	  case 'P6':
-	  	return "regiert";
-		  break;
-	  case 'P7':
-	  	return "hat einen Bruder mit dem Namen";
-		  break;
-	  case 'P9':
-	  	return "hat eine Schwester mit dem Namen";
-		  break;
-	  case 'P19':
-		  return "ist geboren in";
-		  break;
-	  case 'P20':
-		  return "ist gestorben in";
-		  break;
-	  case 'P27':
-		  return "ist Bürger(in) von";
-		  break;
-	  case 'P69':
-		  return "besuchte die Universität von";
-		  break;
-	  case 'P106':
-		  return "arbeitet als";
-		  break;
-	  case 'P190':
-		  return "ist die Schwesterstadt von";
-		  break;
-
-	  default:
-	    //Statements executed when none of the values match the value of the expression
-      return "?"+pId+"?";
-      break;
-	}
-}
