@@ -42,7 +42,7 @@ var claimRequest = initialSearchResults.then(function(sourceQ) {
     var items = response.body.items;
     var entityId = items[Math.floor(Math.random()*items.length)];
     requestEntity(root, sourceQ, entityId, 'P19').then(function() {
-      console.log("story ends here");
+      console.log("Ende.");
     });
   });
 });
