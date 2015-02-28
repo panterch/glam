@@ -203,7 +203,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
   function playVoice( object ) {
     if (object.d.tts && !object.d.loaded) {
       console.log(object.d);
-      $('audio').prop('src', object.d.tts)[0].play();
+      $('#voice').prop('src', object.d.tts)[0].play();
       object.d.loaded = true;
     }
   }
