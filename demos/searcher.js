@@ -4,8 +4,15 @@ var wdk = require('wikidata-sdk');
 var breq = require('bluereq');
 var _ = require('underscore');
 
-var query = process.argv[2];
-var url = wdk.searchEntities(query, 'de', 10);
+window.statements = [];
+
+// var query = process.argv[2];
+var query = 'Zürich';
+var proxyUrl = function(url) {
+  return 'https://jsonp.nodejitsu.com/?url=' + encodeURIComponent(url);
+};
+var url = proxyUrl(wdk.searchEntities(query, 'de', 10));
+console.log(url);
 var initialSearchRequest = breq.get(url);
 var visited = []
 var root = {}
@@ -32,7 +39,7 @@ var verbs = {
 var initialSearchResults = initialSearchRequest.then(function(response) {
   var result = response.body.search[0];
   pushDataToUi({text: query+' ist '+result.description+'.'});
-  var url = wdk.getEntities([result.id], 'de');
+  var url = proxyUrl(wdk.getEntities([result.id], 'de'));
   return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
@@ -41,7 +48,7 @@ var initialSearchResults = initialSearchRequest.then(function(response) {
 })
 
 var claimRequest = initialSearchResults.then(function(sourceQ) {
-  var url = wdk.getReverseClaims('P19', sourceQ.id);
+  var url = proxyUrl(wdk.getReverseClaims('P19', sourceQ.id));
   return breq.get(url).then(function(response) {
     var qIds = _.shuffle(response.body.items);
     var qId = qIds.shift();
@@ -54,7 +61,7 @@ var claimRequest = initialSearchResults.then(function(sourceQ) {
 var requestEntity = function(path, sourceQ, entityId, propId) {
   path = addPath(path, propId, entityId);
   visited.push(entityId);
-  var url = wdk.getEntities([entityId], 'de');
+  var url = proxyUrl(wdk.getEntities([entityId], 'de'));
   return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
@@ -148,6 +155,7 @@ function buildSentence(sourceQ, pId, targetQ) {
 }
 
 function pushDataToUi(data) {
+  window.statements.push(data);
   console.log(data);
 }
 
