@@ -1,3 +1,5 @@
+var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keothavong ist eine britische Tennisspielerin.","London ist eine Hauptstadt des Vereinigten Königreichs.","Boris Johnson ist eine britischer Journalist, Publizist, Schriftsteller und Politiker der Conservative Party.","New York City ist eine Metropole an der Ostküste der Vereinigten Staaten.","Bill de Blasio ist eine Bürgermeister von New York, New York, USA.","Manhattan ist eine einer von 5 Stadtbezirken (Borough) von New York City.","Budapest ist eine Hauptstadt von Ungarn.","István Tarlós.","Berlin ist eine Hauptstadt von Deutschland und ein Land in Deutschland.","Los Angeles ist eine Metropole im US-Bundesstaat Kalifornien.","Eric Garcetti ist eine Bürgermeister von Los Angeles.","Klaus Wowereit ist eine Regierender Bürgermeister von Berlin.","West-Berlin ist eine ehemalige Westsektoren von Berlin.","Berlin ist eine Hauptstadt von Deutschland und ein Land in Deutschland.","ENDE"];
+
 (function() {
 
   var canvasRenderer, cssRenderer;
@@ -10,6 +12,7 @@
 
   var stats;
   var auto = true;
+  var voice = false;
 
   var slides = [];
   var templates = {};
@@ -43,9 +46,12 @@
 
     var object = new THREE.CSS3DObject( slide );
 
+    object.d = d;
+
     return object;
 
   };
+
 
   function init() {
 
@@ -98,6 +104,7 @@
     initPreloader();
   }
 
+
   function initPreloader() {
     preloaderScene = new THREE.Scene();
 
@@ -115,36 +122,57 @@
     preloaderScene.add( helper );
   }
 
+
+    // caution: very hacky because it relies on the demo form of acapella tts
+  function preloadTTS(data, i) {
+    var datum = data[i];
+
+    if (!datum) { return; }
+
+    $.ajax({
+      url: 'http://numbers.korny.cc/tts.php',
+        data: {
+          s: 'sonid15',
+          v: _.sample(['Andreas', 'Jonas', 'Julia', 'Klaus', 'Lea', 'Sarah']),
+          q: datum.text
+        },
+        method: 'POST'
+    })
+    .done(function(raw) {
+      datum.tts = JSON.parse(raw).data;
+    })
+    .always(function() {
+      preloadTTS(data, i+1);
+    });
+  }
+
+
   function search(term) {
     console.log(term);
 
+//TODO: fix for now
     restart();
   }
 
 
   function load() {
-    onLoad();
+//TODO: load data via websockets;
+    onLoad( mockData );
   }
     
-  function onLoad( raw ) {
-    //var data = raw;
-    var data = [{
-      type: 'text',
-      text: 'Hello world, this is the first sentence'
-    }, {
-      type: 'text',
-      text: 'another thing in this world'
-    }, {
-      type: 'text',
-      text: 'another thing in this world'
-    }, {
-      type: 'text',
-      text: 'another thing in this world'
-    }, {
-      type: 'text',
-      text: 'another thing in this world'
-    }];
 
+  function onLoad( raw ) {
+    var data = _.map(raw, function(d) {
+      return {
+        type: 'text',
+        text: d
+      };
+    });
+    
+    if (voice) {
+      preloadTTS( data, 0 );
+    }
+    
     _.each( data, function( d ) {
       var object = new Slide( d );
 
@@ -166,6 +194,15 @@
   }
 
 
+//TODO: improve
+  function playVoice( object ) {
+    if (object.d.tts && !object.d.loaded) {
+      console.log(object.d);
+      $('audio').prop('src', object.d.tts)[0].play();
+      object.d.loaded = true;
+    }
+  }
+
   function move( delta ) {
     var focal = 500;
 
@@ -186,6 +223,10 @@
         }
         opacity = Math.max( 0, 1 - Math.abs( dist / ( focal * 2 ) ) );
         left = true;
+      }
+
+      if (voice && opacity > 0.3) {
+        playVoice(object);
       }
 
       object.element.style.opacity = opacity;
