@@ -3,12 +3,17 @@
 var wdk = require('wikidata-sdk');
 var breq = require('bluereq');
 var _ = require('underscore');
+var md5 = require('MD5');
 
 var query = process.argv[2];
 var url = wdk.searchEntities(query, 'de', 10);
 var initialSearchRequest = breq.get(url);
 var visited = []
 var root = {}
+
+
+
+
 
 var verbs = {
   P6: "wird regiert von",
@@ -52,14 +57,15 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
   visited.push(entityId);
   var url = wdk.getEntities([entityId], 'de');
   return breq.get(url).then(function(response) {
-    var firstEntityKey = Object.keys(response.body.entities)[0];
-    var firstEntity = response.body.entities[firstEntityKey];
-    var sentence = buildSentence(sourceQ, propId, firstEntity);
+    var qId = Object.keys(response.body.entities)[0];
+    var q = response.body.entities[qId];
+    var sentence = buildSentence(sourceQ, propId, q);
+    var image = extractImage(q);
     pushDataToUi({
       text: sentence,
-      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Zuerich_Fraumuenster_St_Peter.jpg'
+      image: image
     });
-    return discoverNextEntities(path, firstEntity);
+    return discoverNextEntities(path, q);
   });
 }
 
@@ -139,8 +145,15 @@ function buildSentence(sourceQ, pId, targetQ) {
   return sentence;
 }
 
-function pushDataToUi(data) {
-  console.log(data);
+function extractImage(q) {
+  var claim = q.claims['P18'];
+  if (!claim) { return undefined; }
+  var file = claim[0].mainsnak.datavalue.value;
+  file = file.replace(/ /g, '_');
+  var hash = md5(file);
+  file = encodeURIComponent(file);
+  url = 'http://upload.wikimedia.org/wikipedia/commons/'+hash[0]+'/'+hash[0]+hash[1]+'/'+file;
+  return url;
 }
 
 function extractLabel(entity){
@@ -153,3 +166,8 @@ function extractLabel(entity){
     }
 	return "Unbekannt";
 }
+
+function pushDataToUi(data) {
+  console.log(data);
+}
+
