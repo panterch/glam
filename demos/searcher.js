@@ -14,12 +14,15 @@ var verbs = {
   P6: "wird regiert von",
   P7: "hat einen Bruder mit dem Namen",
   P9: "hat eine Schwester mit dem Namen",
+  P17: "liegt in",
   P19: "ist geboren in",
   P20: "ist gestorben in",
   P27: "ist Bürger(in) von",
   P69: "besuchte die Universität von",
   P106: "arbeitet als",
+  P138: "ist benannt nach",
   P190: "ist die Schwesterstadt von",
+  P610: "hat die höchste Erhebung",
 }
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
