@@ -31,7 +31,7 @@ var verbs = {
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
   var result = response.body.search[0];
-  console.log(query+' ist '+result.description+'.');
+  pushDataToUi({text: query+' ist '+result.description+'.'});
   var url = wdk.getEntities([result.id], 'de');
   return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
@@ -58,7 +58,11 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
   return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
-    writeSentence(sourceQ, propId, firstEntity);
+    var sentence = buildSentence(sourceQ, propId, firstEntity);
+    pushDataToUi({
+      text: sentence,
+      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Zuerich_Fraumuenster_St_Peter.jpg'
+    });
     return discoverNextEntities(path, firstEntity);
   });
 }
@@ -135,12 +139,16 @@ function debug() {
   console.log.apply(console, args);
 }
 
-function writeSentence(sourceQ, pId, targetQ) {
+function buildSentence(sourceQ, pId, targetQ) {
   var sourceName = extractLabel(sourceQ);
   var propertySentence = verbs[pId];
   var targetName = extractLabel(targetQ);
   var sentence = sourceName + ' ' +  propertySentence + ' ' +  targetName + '.';
-  console.log(sentence)
+  return sentence;
+}
+
+function pushDataToUi(data) {
+  console.log(data);
 }
 
 function extractLabel(entity){
