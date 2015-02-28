@@ -4,3 +4,4 @@ bundle.js
 .sass-cache
 .divshot-cache
 dist
+npm-debug.log
