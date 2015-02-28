@@ -105,8 +105,10 @@ a {
   text-align: center;
   font-size: 6em;
   -webkit-font-smoothing: antialiased;
-  background-size: contain;
+  background-size: cover;
   background-repeat: no-repeat;
-  background-position: center center; }
+  background-position: top center; }
+  .slide p {
+    text-shadow: 0 3px 0 black; }
 
 /*# sourceMappingURL=main.css.map */
