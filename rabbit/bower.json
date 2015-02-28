@@ -1,0 +1,25 @@
+{
+  "name": "red-sandbox",
+  "version": "0.1.0",
+  "authors": [
+    "Benny Schudel <bennyschudel@gmail.com>"
+  ],
+  "description": "NZZ.interactive() Sandbox",
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.3",
+    "lodash": "~2.4.1",
+    "bourbon": "~4.1.1",
+    "createjs-tweenjs": "~0.6.0",
+    "tweenjs": "*",
+    "stats.js": "*"
+  }
+}
