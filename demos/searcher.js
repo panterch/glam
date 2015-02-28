@@ -5,16 +5,6 @@ var _ = require('underscore');
 var md5 = require('MD5');
 var Promise = require('bluebird');
 
-// var query = null;
-// var run = function() {
-//   if (process.argv) {
-//     query = process.argv[2];
-//   } else {
-//     query = 
-//   }
-// }
-// var query = process.argv[2];
-// var query = 'Zürich';
 var proxyUrl = function(url) {
   return 'https://jsonp.nodejitsu.com/?url=' + encodeURIComponent(url);
 };
@@ -34,17 +24,6 @@ function createCORSRequest(method, url) {
   }
   return xhr;
 }
-
-var getUrl = function(url) {
-  var current = Promise.pending();
-  var xhr = createCORSRequest('GET', url);
-  xhr.onload = function() {
-    console.log(JSON.parse(xhr.responseText));
-    current.resolve({body: JSON.parse(xhr.responseText)});
-  }
-  xhr.send();
-  return current.promise;
-};
 
 var visited = [];
 var root = {};
@@ -68,12 +47,12 @@ var verbs = {
   P610: "hat die höchste Erhebung",
 };
 
-window.run = function(query) {
+var run = function(query) {
   visited = [];
   root = {};
 
   var url = proxyUrl(wdk.searchEntities(query, 'de', 10));
-  var initialSearchRequest = getUrl(url);  
+  var initialSearchRequest = getUrl(url);
 
   var initialSearchResults = initialSearchRequest.then(function(response) {
     var result = response.body.search[0];
@@ -218,6 +197,30 @@ function extractLabel(entity){
 		}
     }
 	return "Unbekannt";
+}
+
+// adpations for node
+if (typeof process !== 'undefined' && process.argv[2]) {
+  var breq = require('bluereq');
+  var getUrl = breq.get;
+  run(process.argv[2]);
+}
+
+// adaptions for browser
+if (typeof window !== 'undefined') {
+
+  var getUrl = function(url) {
+    var current = Promise.pending();
+    var xhr = createCORSRequest('GET', url);
+    xhr.onload = function() {
+      console.log(JSON.parse(xhr.responseText));
+      current.resolve({body: JSON.parse(xhr.responseText)});
+    }
+    xhr.send();
+    return current.promise;
+  };
+
+  window.run = run;
 }
 
 function pushDataToUi(data) {
