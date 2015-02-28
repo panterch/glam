@@ -10,43 +10,51 @@ var initialSearchRequest = breq.get(url);
 var visited = []
 var root = {}
 
-var templates = {
-  5: handleHuman,
-  P6: handleHuman, // head of gov
-  P7: handleHuman,
-  P9: handleHuman,
-  P19: handleCity, // place of birth
-  P20: handleCity, // place of death
-  P190: handleCity, // sister city
+var verbs = {
+  P6: "wird regiert von",
+  P7: "hat einen Bruder mit dem Namen",
+  P9: "hat eine Schwester mit dem Namen",
+  P17: "liegt in",
+  P19: "ist geboren in",
+  P20: "ist gestorben in",
+  P27: "ist Bürger(in) von",
+  P69: "besuchte die Universität von",
+  P106: "arbeitet als",
+  P138: "ist benannt nach",
+  P190: "ist die Schwesterstadt von",
+  P610: "hat die höchste Erhebung",
 }
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
   var result = response.body.search[0];
   console.log(query+' ist '+result.description+'.');
-  return result.id;
+  var url = wdk.getEntities([result.id], 'de');
+  return breq.get(url).then(function(response) {
+    var firstEntityKey = Object.keys(response.body.entities)[0];
+    var firstEntity = response.body.entities[firstEntityKey];
+    return firstEntity;
+  });
 })
 
-var claimRequest = initialSearchResults.then( function(wdId) {
-  var url = wdk.getReverseClaims('P19', wdId);
-  return breq.get(url);
-});
-
-var entityIdRequest = claimRequest.then(function(response) {
-  var items = response.body.items;
-  var entityId = items[Math.floor(Math.random()*items.length)];
-  var initialPromise = requestEntity(root, entityId, 'P19').then(function() {
-    console.log("story ends here");
+var claimRequest = initialSearchResults.then(function(sourceQ) {
+  var url = wdk.getReverseClaims('P19', sourceQ.id);
+  return breq.get(url).then(function(response) {
+    var qIds = _.shuffle(response.body.items);
+    var qId = qIds.shift();
+    requestEntity(root, sourceQ, qId, 'P19').then(function() {
+      console.log("Ende.");
+    });
   });
 });
 
-var requestEntity = function(path, entityId, propId) {
+var requestEntity = function(path, sourceQ, entityId, propId) {
   path = addPath(path, propId, entityId);
   visited.push(entityId);
   var url = wdk.getEntities([entityId], 'de');
   return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
-    writeSentence(firstEntity, propId);
+    writeSentence(sourceQ, propId, firstEntity);
     return discoverNextEntities(path, firstEntity);
   });
 }
@@ -63,7 +71,7 @@ var discoverNextEntities = function(path, source) {
       continue;
     }
     var entityId = 'Q'+claimContainer.mainsnak.datavalue.value['numeric-id'];
-    if(templates[propId]) {
+    if(verbs[propId]) {
       if (_.contains(visited, entityId)) {
         ignored.push(entityId+'(v)');
         // console.log('not visiting already used entity', entityId);
@@ -76,16 +84,16 @@ var discoverNextEntities = function(path, source) {
     }
   }
 
-  return tryNextEntities(path, candidates);
+  return tryNextEntities(path, source, candidates);
 }
 
-var tryNextEntities = function(path, candidates) {
+var tryNextEntities = function(path, sourceQ, candidates) {
   // debug('candidates', candidates);
   var candidate = candidates.shift();
   if (candidate) {
-    return requestEntity(path, candidate.entityId, candidate.propId).then(function() {
+    return requestEntity(path, sourceQ, candidate.entityId, candidate.propId).then(function() {
       if (candidates.length) {
-        return tryNextEntities(path, candidates);
+        return tryNextEntities(path, sourceQ, candidates);
       } else {
       }
     });
@@ -93,33 +101,6 @@ var tryNextEntities = function(path, candidates) {
     path.next = null;
     // debug("end of path");
     return null;
-  }
-}
-
-function handleHuman(entity, propId) {
-  var sentence = "("+entity.id+"/"+propId+") ";
-  if (entity.labels && entity.labels.de) {
-    sentence = sentence + entity.labels.de.value;
-  }
-  if (entity.descriptions && entity.descriptions.de) {
-    sentence = sentence +
-      ' war/ist ein/e ' +
-      entity.descriptions.de.value
-  }
-  sentence = sentence + '.';
-  console.log(sentence);
-}
-
-function handleCity(entity, propId) {
-  handleHuman(entity, propId);
-}
-
-var writeSentence = function(entity, propId) {
-  var strategy = templates[propId];
-  if (strategy) {
-    strategy(entity, propId);
-  } else {
-    console.log('No strategy for', propId);
   }
 }
 
@@ -144,4 +125,23 @@ function debug() {
   var args = Array.prototype.slice.call(arguments);
   args.unshift(pathToArray(root).join('->'));
   console.log.apply(console, args);
+}
+
+function writeSentence(sourceQ, pId, targetQ) {
+  var sourceName = extractLabel(sourceQ);
+  var propertySentence = verbs[pId];
+  var targetName = extractLabel(targetQ);
+  var sentence = sourceName + ' ' +  propertySentence + ' ' +  targetName + '.';
+  console.log(sentence)
+}
+
+function extractLabel(entity){
+    if (entity.labels) {
+		for(var label in entity.labels){
+		    if(entity.labels[label] && entity.labels[label].value){
+		    	return entity.labels[label].value;
+		    }
+		}
+    }
+	return "Unbekannt";
 }
