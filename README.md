@@ -4,6 +4,11 @@ This project is being developed as part of the [#GLAMhack](https://twitter.com/s
 
 * [Wiki Entry](make.opendata.ch/wiki/project:the-endless-story)
 
+## Uses
+
+* https://www.wikidata.org
+* https://jsonp.nodejitsu.com
+
 ## Deployment
 
 Compile the javascript and bundle it for the browser to serve
