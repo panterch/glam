@@ -8,7 +8,7 @@ var query = process.argv[2];
 var url = wdk.searchEntities(query, 'de', 10);
 var initialSearchRequest = breq.get(url);
 var visited = []
-var path = [ ]
+var root = {}
 
 var templates = {
   5: handleHuman,
@@ -34,24 +34,24 @@ var claimRequest = initialSearchResults.then( function(wdId) {
 var entityIdRequest = claimRequest.then(function(response) {
   var items = response.body.items;
   var entityId = items[Math.floor(Math.random()*items.length)];
-  var initialPromise = requestEntity(entityId, 'P19').then(function() {
+  var initialPromise = requestEntity(root, entityId, 'P19').then(function() {
     console.log("story ends here");
   });
 });
 
-var requestEntity = function(entityId, propId) {
-  path.push(propId, entityId);
+var requestEntity = function(path, entityId, propId) {
+  path = addPath(path, propId, entityId);
   visited.push(entityId);
   var url = wdk.getEntities([entityId], 'de');
   return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
     writeSentence(firstEntity, propId);
-    return discoverNextEntities(firstEntity);
+    return discoverNextEntities(path, firstEntity);
   });
 }
 
-var discoverNextEntities = function(source) {
+var discoverNextEntities = function(path, source) {
   // debug('discovering next');
   var propIds = Object.keys(source.claims)
   var ignored = []
@@ -76,21 +76,22 @@ var discoverNextEntities = function(source) {
     }
   }
 
-  return tryNextEntities(candidates);
+  return tryNextEntities(path, candidates);
 }
 
-var tryNextEntities = function(candidates) {
+var tryNextEntities = function(path, candidates) {
   // debug('candidates', candidates);
   var candidate = candidates.shift();
   if (candidate) {
-    return requestEntity(candidate.entityId, candidate.propId).then(function() {
+    return requestEntity(path, candidate.entityId, candidate.propId).then(function() {
       if (candidates.length) {
-        return tryNextEntities(candidates);
+        return tryNextEntities(path, candidates);
       } else {
-        // debug("end of path");
       }
     });
   } else {
+    path.next = null;
+    // debug("end of path");
     return null;
   }
 }
@@ -122,8 +123,25 @@ var writeSentence = function(entity, propId) {
   }
 }
 
+function addPath(path, p, q) {
+  path = path.next = { data: p};
+  path = path.next = { data: q};
+  return path;
+}
+
+function pathToArray(path) {
+  var rv = [];
+  do {
+    path = path.next;
+    rv.push(path.data);
+  } while (path.next);
+
+  return rv;
+}
+
 function debug() {
+
   var args = Array.prototype.slice.call(arguments);
-  args.unshift(path.join('->'));
+  args.unshift(pathToArray(root).join('->'));
   console.log.apply(console, args);
 }
