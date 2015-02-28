@@ -6,7 +6,7 @@ This project is being developed as part of the [#GLAMhack](https://twitter.com/s
 [![The Endless Story](screenshot.png)](http://the-endless-story.divshot.io)
 
 * [Wiki Entry](make.opendata.ch/wiki/project:the-endless-story)
-* [Live](the-endless-story.divshot.io)
+* [Live](http://the-endless-story.divshot.io)
 
 ## Team
 * [@beatseeliger](https://twitter.com/beatseeliger)
