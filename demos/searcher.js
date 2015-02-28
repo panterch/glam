@@ -17,6 +17,7 @@ var verbs = {
   P17: "liegt in",
   P19: "ist geboren in",
   P20: "ist gestorben in",
+  P26: "ist verheiratet mit",
   P27: "ist Bürger(in) von",
   P69: "besuchte die Universität von",
   P106: "arbeitet als",
