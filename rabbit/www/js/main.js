@@ -19,11 +19,12 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
   var templates = {};
 
   var $input = $('#input');
+
   
   (function loadTemplates() {
     templates['slide'] = _.template( $('#tpl-slide').html() );
-    templates['text'] = _.template( $('#tpl-slide-text').html() );
   })();
+
 
   (function initStats() {
     stats = new Stats();
@@ -39,28 +40,27 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
 
   var Slide = function ( d ) {
-
     var $slide = $( templates.slide( { d: d } ) );
     var slide = $slide.get(0);
-
-    $slide.html( templates.text( { d: d } ) );
 
     var object = new THREE.CSS3DObject( slide );
 
     object.d = d;
 
     return object;
-
   };
 
 
   function init() {
+    var aspect = window.innerWidth / window.innerHeight;
 
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
+    camera = new THREE.PerspectiveCamera( 75, aspect, 1, 5000 );
     camera.position.y = 25;
     
-    cameraB = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
-    cameraB.position.z = 400;
+    var dist = 100;
+
+    cameraB = new THREE.OrthographicCamera( -dist * aspect, dist * aspect, dist, -dist, 1, 1000 );
+    cameraB.position.set( dist, dist, dist );
 
     renderer = new THREE.WebGLRenderer( {
       antialias: true
@@ -77,7 +77,8 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
     cssScene = new THREE.Scene();
 
-    document.body.addEventListener( 'mousewheel', onMouseWheel, false );
+    // NOTE: no mousewheel support for now
+//    document.body.addEventListener( 'mousewheel', onMouseWheel, false );
 
     window.addEventListener( 'resize', onWindowResize, false );
 
@@ -109,7 +110,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
   function initPreloader() {
     preloaderScene = new THREE.Scene();
 
-    var geometry = new THREE.BoxGeometry( 50, 50, 50 );
+    var geometry = new THREE.BoxGeometry( 25, 25, 25 );
     var mesh = preloaderMesh = new THREE.Mesh( geometry );
     mesh.visible = false;
     
@@ -121,6 +122,8 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
     preloaderScene.add( mesh );
     preloaderScene.add( helper );
+
+    cameraB.lookAt( preloaderScene.position );
   }
 
 
@@ -157,20 +160,23 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
 
   function load() {
-//TODO: load data via websockets;
-    onLoad( mockData );
+    var data = _.filter( window.statements, function( d ) {
+      return ( !( 'loaded' in d ) || !d.loaded );
+    });
+
+    if (!data) {
+      return setTimeout(load, 2e3);
+    }
+
+      // load next three slices
+    onLoad( data.slice(0, 3) );
   }
     
 
-  function onLoad( raw ) {
-    var data = _.map(raw, function(d) {
-      return {
-        type: 'text',
-        text: d
-      };
-    });
-    
-    if (voice) {
+  function onLoad( data ) {
+    data.loaded = true;
+
+    if (data && voice) {
       preloadTTS( data, 0 );
     }
     
@@ -182,10 +188,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
       object.position.z = lastZ - 1000;
       cssScene.add( object );
-
     } );
-
-    animate();
   }
 
 
@@ -204,6 +207,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
     }
   }
 
+
   function move( delta ) {
     var focal = 500;
 
@@ -212,7 +216,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
     var focalZ = newZ - focal;
     var left = false;
 
-    _.each( cssScene.children, function( object ) {
+    _.each( cssScene.children, function( object, i ) {
       var opacity = 0;
       var z = object.position.z;
       var delta = newZ - z;
@@ -224,14 +228,25 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
         }
         opacity = Math.max( 0, 1 - Math.abs( dist / ( focal * 2 ) ) );
         left = true;
+
+        if (object.d.image && delta < focal * 3) {
+          object.element.style.backgroundImage = 'url('+object.d.image+')';
+        }
+        else {
+          object.element.style.backgroundImage = 'none';
+        }
       }
 
       if (voice && opacity > 0.3) {
         playVoice(object);
       }
 
-      object.element.style.opacity = opacity;
-      object.element.style.visibility = ( opacity ) ? 'visible' : 'hidden';
+      var newOpacity = Math.floor((opacity / 20) * 100) / 100;
+
+      if (object.element.style.opacity !== newOpacity) {
+        object.element.style.opacity = newOpacity;
+        object.element.style.display = ( newOpacity ) ? 'flex' : 'none';
+      }
     });
 
     if (left) {
@@ -251,14 +266,18 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
 
   function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    aspect = width / height;
+    camera.aspect = aspect;
     camera.updateProjectionMatrix();
 
-    cameraB.aspect = window.innerWidth / window.innerHeight;
+    cameraB.aspect = aspect;
     cameraB.updateProjectionMatrix();
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    cssRenderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize( width, height );
+    cssRenderer.setSize( width, height );
   }
 
 
@@ -276,13 +295,15 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
   }
 
   function render() {
-    renderer.render( preloaderScene, cameraB );
+    //renderer.render( preloaderScene, cameraB );
     cssRenderer.render( cssScene, camera );
 
     stats.update();
   }
 
   init();
-  load();
+  animate();
+  
+  setInterval(load, 5e3);
 
 })();

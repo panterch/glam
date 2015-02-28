@@ -31,7 +31,7 @@ body {
           color: rgba(255, 255, 255, 0.2); }
       body.theme--black #input.expanded {
         background-color: black; }
-    body.theme--black .slide[data-type="text"] {
+    body.theme--black .slide {
       background-color: black; }
   body.theme--white {
     background-color: white;
@@ -51,7 +51,7 @@ body {
           color: rgba(0, 0, 0, 0.2); }
       body.theme--white #input.expanded {
         background-color: white; }
-    body.theme--white .slide[data-type="text"] {
+    body.theme--white .slide {
       background-color: white; }
 
 a {
@@ -101,10 +101,12 @@ a {
   height: 1080px;
   display: flex;
   align-items: center;
-  justify-content: center; }
-  .slide[data-type="text"] {
-    font-size: 6em;
-    text-align: center;
-    -webkit-font-smoothing: antialiased; }
+  justify-content: center;
+  text-align: center;
+  font-size: 6em;
+  -webkit-font-smoothing: antialiased;
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: fixed; }
 
 /*# sourceMappingURL=main.css.map */

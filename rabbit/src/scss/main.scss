@@ -25,9 +25,7 @@
   }
 
   .slide {
-    &[data-type="text"] {
-      background-color: $colorA;
-    }
+    background-color: $colorA;
   }  
 }
 
@@ -120,14 +118,15 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
 
-  &[data-type="text"] {
-    font-size: 6em;
+  font-size: 6em;
 
-    text-align: center;
+  -webkit-font-smoothing: antialiased;
 
-    -webkit-font-smoothing: antialiased;
-  }
+  background-size: 100%;
+  background-repeat: no-repeat;
+  background-position: fixed;
 }
 .slide-container {
 }
