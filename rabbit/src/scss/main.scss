@@ -1,5 +1,40 @@
 @import '../../bower_components/bourbon/app/assets/stylesheets/bourbon';
 
+@mixin theme(
+  $colorA: black,
+  $colorB: white
+) {
+  background-color: $colorA;
+  color: $colorB;
+
+  #input {
+    background-color: rgba($colorA, 0);
+
+    input {
+      border-color: $colorB;
+      color: $colorB;
+
+      @include placeholder {
+        color: rgba($colorB, 0.2);
+      }
+    }
+
+    &.expanded {
+      background-color: $colorA;
+    }
+  }
+
+  .slide {
+    &[data-type="text"] {
+      background-color: rgba($colorA, 0.90);
+    }
+  }  
+}
+
+*, *:after, *:before {
+  @include box-sizing(border-box);
+}
+
 html {
   height: 100%;
 }
@@ -8,13 +43,74 @@ body {
   font-size: 16px;
   line-height: 1;
 
-  background-color: black;
-  color: white;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+
+  &.theme {
+    &--black {
+      @include theme(black, white);
+    }
+
+    &--white {
+      @include theme(white, black);
+    }
+  }
 }
 
 a {
   text-decoration: underline;
   color: white;
+}
+
+#input {
+  @include transition(all 0.2s linear);
+
+  @include position(absolute, 0px 0px auto 0px);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding-top: 1rem;
+  text-align: center;
+
+  max-height: 20%;
+
+  form {
+    display: block;
+    width: 100%;
+  }
+
+  input {
+    @include transition(all 0.2s linear);
+
+    display: inline-block;
+
+    font-size: 2em;
+    outline: none;
+
+    padding: 5px;
+    width: 40%;
+
+    background-color: transparent;
+
+    border-style: solid;
+    border-width: 0 0 2px 0;
+
+    text-align: center;
+  }
+
+  &.expanded {
+    min-height: 100%;
+
+    input {
+      width: 80%;
+
+      font-size: 6em;
+      border-bottom-width: 5px;
+    }
+  }
 }
 
 .slide {
@@ -28,59 +124,10 @@ a {
   &[data-type="text"] {
     font-size: 6em;
 
-    background-color: rgba(black, 0.90);
     text-align: center;
 
     -webkit-font-smoothing: antialiased;
   }
 }
 .slide-container {
-}
-
-#input {
-  @include transition(all 0.2s linear);
-
-  @include position(absolute, 0px 0px auto 0px);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background-color: black;
-  max-height: 20%;
-
-  input {
-    @include transition(all 0.2s linear);
-
-    font-size: 2em;
-    outline: none;
-
-    padding: 5px;
-
-    background-color: transparent;
-    color: white;
-
-    border-style: solid;
-    border-width: 0 0 2px 0;
-    border-color: white;
-
-    text-align: center;
-
-    @include placeholder {
-      color: rgba(white, 0.2);
-    }
-
-    &:focus {
-
-    }
-  }
-
-  &.expanded {
-    min-height: 100%;
-
-    input {
-      font-size: 6em;
-      border-bottom-width: 5px;
-    }
-  }
 }

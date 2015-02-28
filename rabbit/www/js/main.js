@@ -67,7 +67,7 @@
 
       var field = evt.target[0];
 
-      doSearch( field.value );
+      search( field.value );
 
       field.blur();
     });
@@ -75,7 +75,8 @@
     var $serachField = $input.find( 'input' );
 
     $serachField.on( 'focus blur', function ( evt ) {
-      $input.toggleClass( 'expanded', ( evt.type === 'focus' ) );
+      auto = ( evt.type === 'blur' );
+      $input.toggleClass( 'expanded', !auto );
       
       if ( evt.type === 'focus' ) {
         $serachField.val( '' );
@@ -83,26 +84,18 @@
     });
   }
 
-  function doSearch(term) {
+  function search(term) {
     console.log(term);
 
     restart();
   }
 
-  function showSearch() {
-    var $field = $input.find( 'input' );
-
-    $input.removeClass( 'hidden' );
-    $field.focus();
-
-    auto = false;
-  }
 
   function load() {
-    onData();
+    onLoad();
   }
     
-  function onData( raw ) {
+  function onLoad( raw ) {
     //var data = raw;
     var data = [{
       type: 'text',
