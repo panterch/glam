@@ -1,2 +1,6 @@
-node_modules
+node_modules/
+bower_components/
 bundle.js
+.sass-cache
+.divshot-cache
+dist

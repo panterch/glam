@@ -2,13 +2,14 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
 (function() {
 
-  var canvasRenderer, cssRenderer;
+  var renderer, cssRenderer;
   var scene, cssScene;
 
   var camera, cameraB;
   var controls;
 
   var preloaderMesh;
+  var preloaderMeshHelper;
 
   var stats;
   var auto = true;
@@ -61,12 +62,12 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
     cameraB = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
     cameraB.position.z = 400;
 
-    canvasRenderer = new THREE.CanvasRenderer( {
+    renderer = new THREE.WebGLRenderer( {
       antialias: true
     } );
-    canvasRenderer.setPixelRatio( window.devicePixelRatio );
-    canvasRenderer.setSize( window.innerWidth, window.innerHeight );
-    document.getElementById( 'container' ).appendChild( canvasRenderer.domElement );
+    renderer.setPixelRatio( window.devicePixelRatio );
+    renderer.setSize( window.innerWidth, window.innerHeight );
+    document.getElementById( 'container' ).appendChild( renderer.domElement );
 
     cssRenderer = new THREE.CSS3DRenderer();
     cssRenderer.setSize( window.innerWidth, window.innerHeight );
@@ -109,16 +110,16 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
     preloaderScene = new THREE.Scene();
 
     var geometry = new THREE.BoxGeometry( 50, 50, 50 );
-    preloaderMesh = new THREE.Mesh( geometry );
-    preloaderMesh.visible = false;
+    var mesh = preloaderMesh = new THREE.Mesh( geometry );
+    mesh.visible = false;
     
-    var helper = new THREE.BoxHelper( preloaderMesh );
+    var helper = preloaderMeshHelper = new THREE.BoxHelper( preloaderMesh );
     helper.material.color.set( 'white' );
     helper.material.linewidth = 2;
     helper.material.linecap = 'round';
     helper.material.linejoin = 'miter';
 
-    preloaderScene.add( preloaderMesh );
+    preloaderScene.add( mesh );
     preloaderScene.add( helper );
   }
 
@@ -256,7 +257,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
     cameraB.aspect = window.innerWidth / window.innerHeight;
     cameraB.updateProjectionMatrix();
 
-    canvasRenderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize( window.innerWidth, window.innerHeight );
     cssRenderer.setSize( window.innerWidth, window.innerHeight );
   }
 
@@ -275,7 +276,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
   }
 
   function render() {
-    canvasRenderer.render( preloaderScene, cameraB );
+    renderer.render( preloaderScene, cameraB );
     cssRenderer.render( cssScene, camera );
 
     stats.update();
