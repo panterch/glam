@@ -11,42 +11,45 @@ var visited = []
 var root = {}
 
 var templates = {
-  5: handleHuman,
-  P6: handleHuman, // head of gov
-  P7: handleHuman,
-  P9: handleHuman,
-  P19: handleCity, // place of birth
-  P20: handleCity, // place of death
-  P190: handleCity, // sister city
+  P6:   true, // head of gov
+  P7:   true, // brother
+  P9:   true, // sister
+  P26:  true, //spouse
+  P19:  true, // place of birth
+  P20:  true, // place of death
+  P190: true, // sister city
 }
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
   var result = response.body.search[0];
   console.log(query+' ist '+result.description+'.');
-  return result.id;
+  var url = wdk.getEntities([result.id], 'de');
+  return breq.get(url).then(function(response) {
+    var firstEntityKey = Object.keys(response.body.entities)[0];
+    var firstEntity = response.body.entities[firstEntityKey];
+    return firstEntity;
+  });
 })
 
-var claimRequest = initialSearchResults.then( function(wdId) {
-  var url = wdk.getReverseClaims('P19', wdId);
-  return breq.get(url);
-});
-
-var entityIdRequest = claimRequest.then(function(response) {
-  var items = response.body.items;
-  var entityId = items[Math.floor(Math.random()*items.length)];
-  var initialPromise = requestEntity(root, entityId, 'P19').then(function() {
-    console.log("story ends here");
+var claimRequest = initialSearchResults.then(function(sourceQ) {
+  var url = wdk.getReverseClaims('P19', sourceQ.id);
+  return breq.get(url).then(function(response) {
+    var items = response.body.items;
+    var entityId = items[Math.floor(Math.random()*items.length)];
+    requestEntity(root, sourceQ, entityId, 'P19').then(function() {
+      console.log("story ends here");
+    });
   });
 });
 
-var requestEntity = function(path, entityId, propId) {
+var requestEntity = function(path, sourceQ, entityId, propId) {
   path = addPath(path, propId, entityId);
   visited.push(entityId);
   var url = wdk.getEntities([entityId], 'de');
   return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
-    writeSentence(firstEntity, propId);
+    writeSentence(sourceQ, propId, firstEntity);
     return discoverNextEntities(path, firstEntity);
   });
 }
@@ -76,16 +79,16 @@ var discoverNextEntities = function(path, source) {
     }
   }
 
-  return tryNextEntities(path, candidates);
+  return tryNextEntities(path, source, candidates);
 }
 
-var tryNextEntities = function(path, candidates) {
+var tryNextEntities = function(path, sourceQ, candidates) {
   // debug('candidates', candidates);
   var candidate = candidates.shift();
   if (candidate) {
-    return requestEntity(path, candidate.entityId, candidate.propId).then(function() {
+    return requestEntity(path, sourceQ, candidate.entityId, candidate.propId).then(function() {
       if (candidates.length) {
-        return tryNextEntities(path, candidates);
+        return tryNextEntities(path, sourceQ, candidates);
       } else {
       }
     });
@@ -96,32 +99,6 @@ var tryNextEntities = function(path, candidates) {
   }
 }
 
-function handleHuman(entity, propId) {
-  var sentence = "("+entity.id+"/"+propId+") ";
-  if (entity.labels && entity.labels.de) {
-    sentence = sentence + entity.labels.de.value;
-  }
-  if (entity.descriptions && entity.descriptions.de) {
-    sentence = sentence +
-      ' war/ist ein/e ' +
-      entity.descriptions.de.value
-  }
-  sentence = sentence + '.';
-  console.log(sentence);
-}
-
-function handleCity(entity, propId) {
-  handleHuman(entity, propId);
-}
-
-var writeSentence = function(entity, propId) {
-  var strategy = templates[propId];
-  if (strategy) {
-    strategy(entity, propId);
-  } else {
-    console.log('No strategy for', propId);
-  }
-}
 
 function addPath(path, p, q) {
   path = path.next = { data: p};
@@ -144,4 +121,67 @@ function debug() {
   var args = Array.prototype.slice.call(arguments);
   args.unshift(pathToArray(root).join('->'));
   console.log.apply(console, args);
+}
+
+
+function writeSentence(sourceQ, pId, targetQ) {
+  var sourceName = "";
+  if (sourceQ.labels && sourceQ.labels.de) {
+	  if(sourceQ.labels.de.value){
+		  sourceName = sourceQ.labels.de.value;
+	  } else {
+		  sourceName = sourceQ.labels.en.value;
+	  }
+  }
+
+  var propertySentence = resolvePropertySentence(pId);
+
+  var targetName = "";
+  if (targetQ.labels && targetQ.labels.de) {
+	  if(targetQ.labels.de.value){
+		  targetName = targetQ.labels.de.value
+	  } else {
+		  targetName = targetQ.labels.en.value;
+	  }
+  }
+  var sentence = sourceName + ' ' +  propertySentence + ' ' +  targetName + '.';
+  console.log(sentence)
+}
+
+
+var resolvePropertySentence = function(pId) {
+	switch (pId) {
+	  case 'P6':
+	  	return "regiert";
+		  break;
+	  case 'P7':
+	  	return "hat einen Bruder mit dem Namen";
+		  break;
+	  case 'P9':
+	  	return "hat eine Schwester mit dem Namen";
+		  break;
+	  case 'P19':
+		  return "ist geboren in";
+		  break;
+	  case 'P20':
+		  return "ist gestorben in";
+		  break;
+	  case 'P27':
+		  return "ist Bürger(in) von";
+		  break;
+	  case 'P69':
+		  return "besuchte die Universität von";
+		  break;
+	  case 'P106':
+		  return "arbeitet als";
+		  break;
+	  case 'P190':
+		  return "ist die Schwesterstadt von";
+		  break;
+
+	  default:
+	    //Statements executed when none of the values match the value of the expression
+      return "?"+pId+"?";
+      break;
+	}
 }
