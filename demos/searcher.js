@@ -39,9 +39,9 @@ var initialSearchResults = initialSearchRequest.then(function(response) {
 var claimRequest = initialSearchResults.then(function(sourceQ) {
   var url = wdk.getReverseClaims('P19', sourceQ.id);
   return breq.get(url).then(function(response) {
-    var items = response.body.items;
-    var entityId = items[Math.floor(Math.random()*items.length)];
-    requestEntity(root, sourceQ, entityId, 'P19').then(function() {
+    var qIds = _.shuffle(response.body.items);
+    var qId = qIds.shift();
+    requestEntity(root, sourceQ, qId, 'P19').then(function() {
       console.log("Ende.");
     });
   });
