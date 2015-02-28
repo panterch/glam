@@ -149,7 +149,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
 
 
   function search(term) {
-    console.log(term);
+    run(term);
 
 //TODO: fix for now
     restart();

@@ -5,14 +5,19 @@ var _ = require('underscore');
 var md5 = require('MD5');
 var Promise = require('bluebird');
 
-
+// var query = null;
+// var run = function() {
+//   if (process.argv) {
+//     query = process.argv[2];
+//   } else {
+//     query = 
+//   }
+// }
 // var query = process.argv[2];
-var query = 'Zürich';
+// var query = 'Zürich';
 var proxyUrl = function(url) {
   return 'https://jsonp.nodejitsu.com/?url=' + encodeURIComponent(url);
 };
-var url = proxyUrl(wdk.searchEntities(query, 'de', 10));
-console.log(url);
 
 function createCORSRequest(method, url) {
   var xhr = new XMLHttpRequest();
@@ -41,13 +46,8 @@ var getUrl = function(url) {
   return current.promise;
 };
 
-var initialSearchRequest = getUrl(url);
-var visited = []
-var root = {}
-
-
-
-
+var visited = [];
+var root = {};
 
 var verbs = {
   P6: "wird regiert von",
@@ -66,29 +66,40 @@ var verbs = {
   p569: "ist geboren am",
   p570: "ist gestorben am",
   P610: "hat die höchste Erhebung",
-}
+};
 
-var initialSearchResults = initialSearchRequest.then(function(response) {
-  var result = response.body.search[0];
-  pushDataToUi({text: query+' ist '+result.description+'.'});
-  var url = proxyUrl(wdk.getEntities([result.id], 'de'));
-  return getUrl(url).then(function(response) {
-    var firstEntityKey = Object.keys(response.body.entities)[0];
-    var firstEntity = response.body.entities[firstEntityKey];
-    return firstEntity;
-  });
-})
+window.run = function(query) {
+  visited = [];
+  root = {};
 
-var claimRequest = initialSearchResults.then(function(sourceQ) {
-  var url = proxyUrl(wdk.getReverseClaims('P19', sourceQ.id));
-  return getUrl(url).then(function(response) {
-    var qIds = _.shuffle(response.body.items);
-    var qId = qIds.shift();
-    requestEntity(root, sourceQ, qId, 'P19').then(function() {
-      console.log("Ende.");
+  var url = proxyUrl(wdk.searchEntities(query, 'de', 10));
+  var initialSearchRequest = getUrl(url);  
+
+  var initialSearchResults = initialSearchRequest.then(function(response) {
+    var result = response.body.search[0];
+    pushDataToUi({text: query+' ist '+result.description+'.'});
+    var url = proxyUrl(wdk.getEntities([result.id], 'de'));
+    return getUrl(url).then(function(response) {
+      var firstEntityKey = Object.keys(response.body.entities)[0];
+      var firstEntity = response.body.entities[firstEntityKey];
+      return firstEntity;
+    });
+  })
+
+  var claimRequest = initialSearchResults.then(function(sourceQ) {
+    var url = proxyUrl(wdk.getReverseClaims('P19', sourceQ.id));
+    return getUrl(url).then(function(response) {
+      var qIds = _.shuffle(response.body.items);
+      var qId = qIds.shift();
+      requestEntity(root, sourceQ, qId, 'P19').then(function() {
+        console.log("Ende.");
+      });
     });
   });
-});
+};
+
+
+
 
 var requestEntity = function(path, sourceQ, entityId, propId) {
   path = addPath(path, propId, entityId);
@@ -194,7 +205,7 @@ function extractImage(q) {
   file = file.replace(/ /g, '_');
   var hash = md5(file);
   file = encodeURIComponent(file);
-  url = 'http://upload.wikimedia.org/wikipedia/commons/'+hash[0]+'/'+hash[0]+hash[1]+'/'+file;
+  var url = 'http://upload.wikimedia.org/wikipedia/commons/'+hash[0]+'/'+hash[0]+hash[1]+'/'+file;
   return url;
 }
 
@@ -220,4 +231,3 @@ function pushDataToUi(data) {
     console.log(data);
   }
 }
-
