@@ -26,7 +26,7 @@
 
   .slide {
     &[data-type="text"] {
-      background-color: rgba($colorA, 0.90);
+      background-color: $colorA;
     }
   }  
 }
