@@ -55,7 +55,10 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
     var sentence = buildSentence(sourceQ, propId, firstEntity);
-    pushDataToUi({ text: sentence, image: undefined});
+    pushDataToUi({
+      text: sentence,
+      image: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Zuerich_Fraumuenster_St_Peter.jpg'
+    });
     return discoverNextEntities(path, firstEntity);
   });
 }
@@ -105,7 +108,6 @@ var tryNextEntities = function(path, sourceQ, candidates) {
   }
 }
 
-
 function addPath(path, p, q) {
   path = path.next = { data: p};
   path = path.next = { data: q};
@@ -129,27 +131,10 @@ function debug() {
   console.log.apply(console, args);
 }
 
-
 function buildSentence(sourceQ, pId, targetQ) {
-  var sourceName = "";
-  if (sourceQ.labels && sourceQ.labels.de) {
-	  if(sourceQ.labels.de.value){
-		  sourceName = sourceQ.labels.de.value;
-	  } else {
-		  sourceName = sourceQ.labels.en.value;
-	  }
-  }
-
+  var sourceName = extractLabel(sourceQ);
   var propertySentence = verbs[pId];
-
-  var targetName = "";
-  if (targetQ.labels && targetQ.labels.de) {
-	  if(targetQ.labels.de.value){
-		  targetName = targetQ.labels.de.value
-	  } else {
-		  targetName = targetQ.labels.en.value;
-	  }
-  }
+  var targetName = extractLabel(targetQ);
   var sentence = sourceName + ' ' +  propertySentence + ' ' +  targetName + '.';
   return sentence;
 }
@@ -158,4 +143,13 @@ function pushDataToUi(data) {
   console.log(data);
 }
 
-
+function extractLabel(entity){
+    if (entity.labels) {
+		for(var label in entity.labels){
+		    if(entity.labels[label] && entity.labels[label].value){
+		    	return entity.labels[label].value;
+		    }
+		}
+    }
+	return "Unbekannt";
+}
