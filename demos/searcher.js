@@ -104,7 +104,6 @@ var tryNextEntities = function(path, sourceQ, candidates) {
   }
 }
 
-
 function addPath(path, p, q) {
   path = path.next = { data: p};
   path = path.next = { data: q};
@@ -128,29 +127,21 @@ function debug() {
   console.log.apply(console, args);
 }
 
-
 function writeSentence(sourceQ, pId, targetQ) {
-  var sourceName = "";
-  if (sourceQ.labels && sourceQ.labels.de) {
-	  if(sourceQ.labels.de.value){
-		  sourceName = sourceQ.labels.de.value;
-	  } else {
-		  sourceName = sourceQ.labels.en.value;
-	  }
-  }
-
+  var sourceName = extractLabel(sourceQ);
   var propertySentence = verbs[pId];
-
-  var targetName = "";
-  if (targetQ.labels && targetQ.labels.de) {
-	  if(targetQ.labels.de.value){
-		  targetName = targetQ.labels.de.value
-	  } else {
-		  targetName = targetQ.labels.en.value;
-	  }
-  }
+  var targetName = extractLabel(targetQ);
   var sentence = sourceName + ' ' +  propertySentence + ' ' +  targetName + '.';
   console.log(sentence)
 }
 
-
+function extractLabel(entity){
+    if (entity.labels) {
+		for(var label in entity.labels){
+		    if(entity.labels[label] && entity.labels[label].value){
+		    	return entity.labels[label].value;
+		    }
+		}
+    }
+	return "Unbekannt";
+}
