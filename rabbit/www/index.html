@@ -1,0 +1,53 @@
+<!doctype html>
+<html class="no-js">
+  <head>
+  <meta charset="utf-8">
+  <title>Rabbit</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  
+  <!-- bower:css -->
+  <!-- endbower -->
+
+  <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body class="theme--black">
+
+  <script type="text/html" id="tpl-slide">
+    <div class="slide" data-type="<%= d.type %>"></div>
+  </script>
+
+  <script type="text/html" id="tpl-slide-text">
+    <div class="slide-container">
+      <p><%= d.text %></p>
+    </div>
+  </script>
+
+  <script type="text/html" id="tpl-slide-image">
+    <div class="slide-container" style="background-image:url(<%= d.src %>)"></div>
+  </script>
+  
+  <div id="container"></div>
+
+  <div id="input">
+    <form name="search">
+      <input type="text" placeholder=""></input>
+    </form>
+  </div>
+
+  <!-- bower:js -->
+  <script src="bower_components/jquery/dist/jquery.js"></script>
+  <script src="bower_components/lodash/dist/lodash.compat.js"></script>
+  <script src="bower_components/createjs-tweenjs/lib/tweenjs-0.6.0.combined.js"></script>
+  <script src="bower_components/stats.js/build/stats.min.js"></script>
+  <!-- endbower -->
+  <script src="bower_components/tweenjs/build/tween.min.js"></script>
+
+  <script src="js/vendor/three.js/build/three.min.js"></script>
+  <script src="js/vendor/three.js/examples/js/renderers/CSS3DRenderer.js"></script>
+  <script src="js/vendor/three.js/examples/js/controls/OrbitControls.js"></script>
+  
+  <script src="js/main.js"></script>
+  
+  </body>
+</html>

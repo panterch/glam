@@ -1,0 +1,110 @@
+*, *:after, *:before {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box; }
+
+html {
+  height: 100%; }
+
+body {
+  font-family: Georgia;
+  font-size: 16px;
+  line-height: 1;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; }
+  body.theme--black {
+    background-color: black;
+    color: white; }
+    body.theme--black #input {
+      background-color: transparent; }
+      body.theme--black #input input {
+        border-color: white;
+        color: white; }
+        body.theme--black #input input::-webkit-input-placeholder {
+          color: rgba(255, 255, 255, 0.2); }
+        body.theme--black #input input::-moz-placeholder {
+          color: rgba(255, 255, 255, 0.2); }
+        body.theme--black #input input:-moz-placeholder {
+          color: rgba(255, 255, 255, 0.2); }
+        body.theme--black #input input:-ms-input-placeholder {
+          color: rgba(255, 255, 255, 0.2); }
+      body.theme--black #input.expanded {
+        background-color: black; }
+    body.theme--black .slide[data-type="text"] {
+      background-color: rgba(0, 0, 0, 0.9); }
+  body.theme--white {
+    background-color: white;
+    color: black; }
+    body.theme--white #input {
+      background-color: rgba(255, 255, 255, 0); }
+      body.theme--white #input input {
+        border-color: black;
+        color: black; }
+        body.theme--white #input input::-webkit-input-placeholder {
+          color: rgba(0, 0, 0, 0.2); }
+        body.theme--white #input input::-moz-placeholder {
+          color: rgba(0, 0, 0, 0.2); }
+        body.theme--white #input input:-moz-placeholder {
+          color: rgba(0, 0, 0, 0.2); }
+        body.theme--white #input input:-ms-input-placeholder {
+          color: rgba(0, 0, 0, 0.2); }
+      body.theme--white #input.expanded {
+        background-color: white; }
+    body.theme--white .slide[data-type="text"] {
+      background-color: rgba(255, 255, 255, 0.9); }
+
+a {
+  text-decoration: underline;
+  color: white; }
+
+#input {
+  -webkit-transition: all 0.2s linear;
+  -moz-transition: all 0.2s linear;
+  transition: all 0.2s linear;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  bottom: auto;
+  left: 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 1rem;
+  text-align: center;
+  max-height: 20%; }
+  #input form {
+    display: block;
+    width: 100%; }
+  #input input {
+    -webkit-transition: all 0.2s linear;
+    -moz-transition: all 0.2s linear;
+    transition: all 0.2s linear;
+    display: inline-block;
+    font-size: 2em;
+    outline: none;
+    padding: 5px;
+    width: 40%;
+    background-color: transparent;
+    border-style: solid;
+    border-width: 0 0 2px 0;
+    text-align: center; }
+  #input.expanded {
+    min-height: 100%; }
+    #input.expanded input {
+      width: 80%;
+      font-size: 6em;
+      border-bottom-width: 5px; }
+
+.slide {
+  width: 1920px;
+  height: 1080px;
+  display: flex;
+  align-items: center;
+  justify-content: center; }
+  .slide[data-type="text"] {
+    font-size: 6em;
+    text-align: center;
+    -webkit-font-smoothing: antialiased; }
+
+/*# sourceMappingURL=main.css.map */
