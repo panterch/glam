@@ -2,7 +2,7 @@
 
 This project is being developed as part of the [#GLAMhack](https://twitter.com/search?q=%23glamhack&src=typd) event at the National Library in Switzerland.
 
-![The Endless Story](screenshot.png)
+![[The Endless Story](the-endless-story.divshot.io)](screenshot.png)
 
 * [Wiki Entry](make.opendata.ch/wiki/project:the-endless-story)
 * [Live](the-endless-story.divshot.io)
