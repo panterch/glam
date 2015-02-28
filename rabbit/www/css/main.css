@@ -105,8 +105,8 @@ a {
   text-align: center;
   font-size: 6em;
   -webkit-font-smoothing: antialiased;
-  background-size: 100%;
+  background-size: contain;
   background-repeat: no-repeat;
-  background-position: fixed; }
+  background-position: center center; }
 
 /*# sourceMappingURL=main.css.map */

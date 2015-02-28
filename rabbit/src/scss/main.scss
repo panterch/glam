@@ -124,9 +124,9 @@ a {
 
   -webkit-font-smoothing: antialiased;
 
-  background-size: 100%;
+  background-size: contain;
   background-repeat: no-repeat;
-  background-position: fixed;
+  background-position: center center;
 }
 .slide-container {
 }
