@@ -1,9 +1,9 @@
 "use strict";
 
 var wdk = require('wikidata-sdk');
-var breq = require('bluereq');
 var _ = require('underscore');
 var md5 = require('MD5');
+var Promise = require('bluebird');
 
 
 // var query = process.argv[2];
@@ -13,7 +13,35 @@ var proxyUrl = function(url) {
 };
 var url = proxyUrl(wdk.searchEntities(query, 'de', 10));
 console.log(url);
-var initialSearchRequest = breq.get(url);
+
+function createCORSRequest(method, url) {
+  var xhr = new XMLHttpRequest();
+  if ("withCredentials" in xhr) {
+    // XHR for Chrome/Firefox/Opera/Safari.
+    xhr.open(method, url, true);
+  } else if (typeof XDomainRequest != "undefined") {
+    // XDomainRequest for IE.
+    xhr = new XDomainRequest();
+    xhr.open(method, url);
+  } else {
+    // CORS not supported.
+    xhr = null;
+  }
+  return xhr;
+}
+
+var getUrl = function(url) {
+  var current = Promise.pending();
+  var xhr = createCORSRequest('GET', url);
+  xhr.onload = function() {
+    console.log(JSON.parse(xhr.responseText));
+    current.resolve({body: JSON.parse(xhr.responseText)});
+  }
+  xhr.send();
+  return current.promise;
+};
+
+var initialSearchRequest = getUrl(url);
 var visited = []
 var root = {}
 
@@ -44,7 +72,7 @@ var initialSearchResults = initialSearchRequest.then(function(response) {
   var result = response.body.search[0];
   pushDataToUi({text: query+' ist '+result.description+'.'});
   var url = proxyUrl(wdk.getEntities([result.id], 'de'));
-  return breq.get(url).then(function(response) {
+  return getUrl(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
     return firstEntity;
@@ -53,7 +81,7 @@ var initialSearchResults = initialSearchRequest.then(function(response) {
 
 var claimRequest = initialSearchResults.then(function(sourceQ) {
   var url = proxyUrl(wdk.getReverseClaims('P19', sourceQ.id));
-  return breq.get(url).then(function(response) {
+  return getUrl(url).then(function(response) {
     var qIds = _.shuffle(response.body.items);
     var qId = qIds.shift();
     requestEntity(root, sourceQ, qId, 'P19').then(function() {
@@ -66,7 +94,7 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
   path = addPath(path, propId, entityId);
   visited.push(entityId);
   var url = proxyUrl(wdk.getEntities([entityId], 'de'));
-  return breq.get(url).then(function(response) {
+  return getUrl(url).then(function(response) {
     var qId = Object.keys(response.body.entities)[0];
     var q = response.body.entities[qId];
     var sentence = buildSentence(sourceQ, propId, q);
