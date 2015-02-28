@@ -163,9 +163,11 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
     var data = _.filter( window.statements, function( d ) {
       return ( !( 'loaded' in d ) || !d.loaded );
     });
+    console.log(data.length);
 
-    if (!data) {
-      return setTimeout(load, 2e3);
+    if (!data.length) {
+      return;
+      // return setTimeout(load, 2e3);
     }
 
       // load next three slices
