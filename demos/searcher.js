@@ -27,6 +27,7 @@ function createCORSRequest(method, url) {
 
 var visited = [];
 var root = {};
+var seenSentences = [];
 
 var verbs = {
   P6: "wird regiert von",
@@ -50,6 +51,7 @@ var verbs = {
 var run = function(query) {
   visited = [];
   root = {};
+  seenSentences = [];
 
   var url = proxyUrl(wdk.searchEntities(query, 'de', 10));
   var initialSearchRequest = getUrl(url);
@@ -92,13 +94,13 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
 	if(root.next && root.next.next && !root.next.next.next) {
 	  sentence = buildSentence(q, propId, sourceQ);
 	}
-	if(root.next && root.next.next && root.next.next.next) {
     var image = extractImage(q);
-    pushDataToUi({
+	
+	pushDataToUi({
       text: sentence,
       image: image
     });
-	}
+
     return discoverNextEntities(path, q);
   });
 }
@@ -230,6 +232,14 @@ if (typeof window !== 'undefined') {
 }
 
 function pushDataToUi(data) {
+	
+  var hash = md5(data.text);
+  if (_.contains(seenSentences, hash)) {
+	  debug("not showing", data.text);
+	return;
+  };
+  seenSentences.push(hash);
+  
   if (typeof window !== 'undefined') {
     if (!window.statements) {
       window.statements = [];
