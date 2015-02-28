@@ -87,7 +87,11 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
   return getUrl(url).then(function(response) {
     var qId = Object.keys(response.body.entities)[0];
     var q = response.body.entities[qId];
-    var sentence = buildSentence(sourceQ, propId, q);
+	var sentence = buildSentence(sourceQ, propId, q);
+	// XXX first sentence needs to be reversed
+	if(root.next && root.next.next && !root.next.next.next) {
+	  sentence = buildSentence(q, propId, sourceQ);
+	}
     var image = extractImage(q);
     pushDataToUi({
       text: sentence,
