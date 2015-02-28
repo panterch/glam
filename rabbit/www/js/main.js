@@ -302,4 +302,8 @@
   
   setInterval(load, 5e3);
 
+  setTimeout(function(){
+    $input.find('input').focus();
+  },200);
+
 })();
