@@ -1,9 +1,12 @@
 (function() {
 
-  var camera;
-  var renderer;
-  var scene;
+  var canvasRenderer, cssRenderer;
+  var scene, cssScene;
+
+  var camera, cameraB;
   var controls;
+
+  var preloaderMesh;
 
   var stats;
   var auto = true;
@@ -49,14 +52,23 @@
     camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 5000 );
     camera.position.y = 25;
     
-    scene = new THREE.Scene();
+    cameraB = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );
+    cameraB.position.z = 400;
 
-    renderer = new THREE.CSS3DRenderer();
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    renderer.domElement.style.position = 'absolute';
-    renderer.domElement.style.top = 0;
+    canvasRenderer = new THREE.CanvasRenderer( {
+      antialias: true
+    } );
+    canvasRenderer.setPixelRatio( window.devicePixelRatio );
+    canvasRenderer.setSize( window.innerWidth, window.innerHeight );
+    document.getElementById( 'container' ).appendChild( canvasRenderer.domElement );
 
-    document.getElementById( 'container' ).appendChild( renderer.domElement );
+    cssRenderer = new THREE.CSS3DRenderer();
+    cssRenderer.setSize( window.innerWidth, window.innerHeight );
+    cssRenderer.domElement.style.position = 'absolute';
+    cssRenderer.domElement.style.top = 0;
+    document.getElementById( 'cssContainer' ).appendChild( cssRenderer.domElement );
+
+    cssScene = new THREE.Scene();
 
     document.body.addEventListener( 'mousewheel', onMouseWheel, false );
 
@@ -82,6 +94,25 @@
         $serachField.val( '' );
       }
     });
+
+    initPreloader();
+  }
+
+  function initPreloader() {
+    preloaderScene = new THREE.Scene();
+
+    var geometry = new THREE.BoxGeometry( 50, 50, 50 );
+    preloaderMesh = new THREE.Mesh( geometry );
+    preloaderMesh.visible = false;
+    
+    var helper = new THREE.BoxHelper( preloaderMesh );
+    helper.material.color.set( 'white' );
+    helper.material.linewidth = 2;
+    helper.material.linecap = 'round';
+    helper.material.linejoin = 'miter';
+
+    preloaderScene.add( preloaderMesh );
+    preloaderScene.add( helper );
   }
 
   function search(term) {
@@ -117,11 +148,11 @@
     _.each( data, function( d ) {
       var object = new Slide( d );
 
-      var lastObject = _.last( scene.children );
+      var lastObject = _.last( cssScene.children );
       var lastZ = ( lastObject ) ? lastObject.position.z : 0;
 
       object.position.z = lastZ - 1000;
-      scene.add( object );
+      cssScene.add( object );
 
     } );
 
@@ -143,7 +174,7 @@
     var focalZ = newZ - focal;
     var left = false;
 
-    _.each( scene.children, function( object ) {
+    _.each( cssScene.children, function( object ) {
       var opacity = 0;
       var z = object.position.z;
       var delta = newZ - z;
@@ -163,7 +194,6 @@
 
     if (left) {
       camera.position.z = Math.min( 0, newZ );
-      render();
     }
     else {
       auto = true;
@@ -179,12 +209,14 @@
 
 
   function onWindowResize() {
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    cameraB.aspect = window.innerWidth / window.innerHeight;
+    cameraB.updateProjectionMatrix();
 
+    canvasRenderer.setSize( window.innerWidth, window.innerHeight );
+    cssRenderer.setSize( window.innerWidth, window.innerHeight );
   }
 
 
@@ -194,10 +226,17 @@
     if ( auto === true ) {
       move( -2 );
     }
+
+    preloaderMesh.rotation.x += 0.005;
+    preloaderMesh.rotation.y += 0.01;
+
+    render();
   }
 
   function render() {
-    renderer.render( scene, camera );
+    canvasRenderer.render( preloaderScene, cameraB );
+    cssRenderer.render( cssScene, camera );
+
     stats.update();
   }
 
