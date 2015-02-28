@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "node node_modules/bower/bin/bower --config.interactive=false install"
+    "postinstall": "node node_modules/bower/bin/bower --config.interactive=false install && grunt --gruntfile rabbit/Gruntfile.js"
   },
   "repository": {
     "type": "git",
