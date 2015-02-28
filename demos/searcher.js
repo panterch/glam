@@ -23,6 +23,9 @@ var verbs = {
   P106: "arbeitet als",
   P138: "ist benannt nach",
   P190: "ist die Schwesterstadt von",
+  p166: "erhielt die Auszeichnung",
+  p569: "ist geboren am",
+  p570: "ist gestorben am",
   P610: "hat die höchste Erhebung",
 }
 
@@ -61,8 +64,12 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
 }
 
 var discoverNextEntities = function(path, source) {
-  // debug('discovering next');
-  var propIds = Object.keys(source.claims)
+  var propIds;
+  if(source && source.claims){ 
+	  propIds = Object.keys(source.claims)
+  } else { 
+	  propIds = []
+  }
   var ignored = []
   var candidates = []
   for (var i=0; i<propIds.length; i++) {
@@ -90,6 +97,7 @@ var discoverNextEntities = function(path, source) {
 
 var tryNextEntities = function(path, sourceQ, candidates) {
   // debug('candidates', candidates);
+  candidates = _.shuffle(candidates);
   var candidate = candidates.shift();
   if (candidate) {
     return requestEntity(path, sourceQ, candidate.entityId, candidate.propId).then(function() {
@@ -122,7 +130,6 @@ function pathToArray(path) {
 }
 
 function debug() {
-
   var args = Array.prototype.slice.call(arguments);
   args.unshift(pathToArray(root).join('->'));
   console.log.apply(console, args);
