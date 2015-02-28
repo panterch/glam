@@ -184,7 +184,7 @@ function extractImage(q) {
   file = file.replace(/ /g, '_');
   var hash = md5(file);
   file = encodeURIComponent(file);
-  var url = 'http://upload.wikimedia.org/wikipedia/commons/'+hash[0]+'/'+hash[0]+hash[1]+'/'+file;
+  var url = 'http://upload.wikimedia.org/wikipedia/commons/thumb/'+hash[0]+'/'+hash[0]+hash[1]+'/'+file+'/800px-'+file;
   return url;
 }
 
