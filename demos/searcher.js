@@ -36,7 +36,7 @@ var verbs = {
   P19: "ist geboren in",
   P20: "ist gestorben in",
   P26: "ist verheiratet mit",
-  P27: "ist Bürger(in) von",
+  P27: "ist Bürger/in von",
   P69: "besuchte die Universität von",
   P106: "arbeitet als",
   P138: "ist benannt nach",
@@ -44,7 +44,7 @@ var verbs = {
   p166: "erhielt die Auszeichnung",
   p569: "ist geboren am",
   p570: "ist gestorben am",
-  P610: "hat die höchste Erhebung",
+  P610: "hat die höchste Erhebung auf der/dem",
 };
 
 var run = function(query) {
@@ -92,11 +92,13 @@ var requestEntity = function(path, sourceQ, entityId, propId) {
 	if(root.next && root.next.next && !root.next.next.next) {
 	  sentence = buildSentence(q, propId, sourceQ);
 	}
+	if(root.next && root.next.next && root.next.next.next) {
     var image = extractImage(q);
     pushDataToUi({
       text: sentence,
       image: image
     });
+	}
     return discoverNextEntities(path, q);
   });
 }
