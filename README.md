@@ -4,6 +4,12 @@ This project is being developed as part of the [#GLAMhack](https://twitter.com/s
 
 * [Wiki Entry](make.opendata.ch/wiki/project:the-endless-story)
 
+## Team
+* [@beatseeliger](https://twitter.com/beatseeliger)
+* [@bennyschudel](https://twitter.com/bennyschudel)
+* [@patbaumgartner](https://twitter.com/patbaumgartner)
+* [@philippkueng](https://twitter.com/philippkueng)
+
 ## Uses
 
 * https://www.wikidata.org
