@@ -176,13 +176,12 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
     
 
   function onLoad( data ) {
-    data.loaded = true;
-
     if (data && voice) {
       preloadTTS( data, 0 );
     }
     
     _.each( data, function( d ) {
+      d.loaded = true;
       var object = new Slide( d );
 
       var lastObject = _.last( cssScene.children );
@@ -243,7 +242,7 @@ var mockData = ["London ist Hauptstadt des Vereinigten Königreichs.","Anne Keot
         playVoice(object);
       }
 
-      var newOpacity = Math.floor((opacity / 20) * 100) / 100;
+      var newOpacity = Math.floor(opacity * 100) / 100;
 
       if (object.element.style.opacity !== newOpacity) {
         object.element.style.opacity = newOpacity;
