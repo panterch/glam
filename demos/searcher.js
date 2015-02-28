@@ -8,14 +8,16 @@ var query = process.argv[2];
 var url = wdk.searchEntities(query, 'de', 10);
 var initialSearchRequest = breq.get(url);
 var visited = []
+var path = [ ]
 
 var templates = {
   5: handleHuman,
+  P6: handleHuman, // head of gov
+  P7: handleHuman,
+  P9: handleHuman,
   P19: handleCity, // place of birth
   P20: handleCity, // place of death
-  P6: handleHuman, // head of gov
   P190: handleCity, // sister city
-
 }
 
 var initialSearchResults = initialSearchRequest.then(function(response) {
@@ -36,31 +38,48 @@ var entityIdRequest = claimRequest.then(function(response) {
 });
 
 var requestEntity = function(entityId, propId) {
+  path.push(propId, entityId);
   visited.push(entityId);
   var url = wdk.getEntities([entityId], 'de');
-  breq.get(url).then(function(response) {
+  return breq.get(url).then(function(response) {
     var firstEntityKey = Object.keys(response.body.entities)[0];
     var firstEntity = response.body.entities[firstEntityKey];
     writeSentence(firstEntity, propId);
-    discoverNextEntity(firstEntity);
+    return discoverNextEntity(firstEntity);
   });
 }
 
-var discoverNextEntity = function(entity) {
-  var propIds = Object.keys(entity.claims)
-  propIds.forEach(function(propId) {
-    var claimContainer =  entity.claims[propId][0];
+var discoverNextEntity = function(source) {
+  debug('discovering next');
+  var propIds = Object.keys(source.claims)
+  var ignored = []
+  var candidates = []
+  for (var i=0; i<propIds.length; i++) {
+    var propId = propIds[i];
+    var claimContainer =  source.claims[propId][0];
+    if (!claimContainer.mainsnak.datavalue) {
+      continue;
+    }
     var entityId = 'Q'+claimContainer.mainsnak.datavalue.value['numeric-id'];
     if(templates[propId]) {
       if (_.contains(visited, entityId)) {
-        console.log('not visiting already used entity', entityId);
+        ignored.push(entityId+'(v)');
+        // console.log('not visiting already used entity', entityId);
       } else {
-        return requestEntity(entityId, propId);
+        candidates.push({propId: propId, entityId: entityId});
       }
     } else {
-      // console.log('dunno what to do with instance ', propId, 'entityId', entityId);
+      ignored.push(propId+entityId+'(u)');
+      // debug('dunno what to do with instance ', propId, 'entityId', entityId);
     }
-  });
+  }
+
+  debug('candidates', candidates);
+  for (var i=0; i<candidates.length; i++) {
+    var propId = candidates[i].propId;
+    var entityId = candidates[i].entityId;
+    return requestEntity(entityId, propId);
+  }
 }
 
 function handleHuman(entity, propId) {
@@ -86,6 +105,12 @@ var writeSentence = function(entity, propId) {
   if (strategy) {
     strategy(entity, propId);
   } else {
-    console.log('No strategy for', instanceOf);
+    console.log('No strategy for', propId);
   }
+}
+
+function debug() {
+  var args = Array.prototype.slice.call(arguments);
+  args.unshift(path.join('->'));
+  console.log.apply(console, args);
 }
