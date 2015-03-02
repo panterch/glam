@@ -62,13 +62,13 @@ a {
 }
 
 #input {
-  @include transition(all 0.2s linear);
+  @include transition(all 0.2s ease-in);
 
   @include position(absolute, 0px 0px auto 0px);
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  @include display(flex);
+  @include align-items(center);
+  @include justify-content(center);
 
   padding-top: 1rem;
   text-align: center;
@@ -92,6 +92,7 @@ a {
     width: 40%;
 
     background-color: transparent;
+    border-radius: 0;
 
     border-style: solid;
     border-width: 0 0 2px 0;
@@ -100,6 +101,8 @@ a {
   }
 
   &.expanded {
+    @include transition-timing-function(ease-out);
+
     min-height: 100%;
 
     input {
@@ -112,12 +115,13 @@ a {
 }
 
 .slide {
+  @include display(flex);
+  @include align-items(center);
+  @include justify-content(center);
+
   width: 1920px;
   height: 1080px;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
   text-align: center;
 
   font-size: 6em;
@@ -126,7 +130,7 @@ a {
 
   background-size: cover;
   background-repeat: no-repeat;
-  background-position: top center;
+  background-position: 25% center;
 
   p {
     text-shadow: 0 3px 0 black;

@@ -1,42 +1,50 @@
 (function() {
 
+    // options
+  var auto = true;
+  var voice = true;
+  var history = 20;
+  var isoCamDist = 100;
+    // ---
+
   var renderer, cssRenderer;
   var scene, cssScene;
 
   var camera, cameraB;
   var controls;
 
-  var preloaderMesh;
-  var preloaderMeshHelper;
+  var cubeMesh;
+  var cubeMeshHelper;
 
   var stats;
-  var auto = true;
-  var voice = true;
 
   var slides = [];
   var templates = {};
 
   var $input = $('#input');
+  var $searchField = $input.find('input');
+
+  var minZ = 0;
 
   
-  (function loadTemplates() {
+  function loadTemplates() {
     templates['slide'] = _.template( $('#tpl-slide').html() );
-  })();
-
+  }
+  loadTemplates();
 
 
   function initStats() {
     stats = new Stats();
-    stats.setMode(0); // 0: fps, 1: ms
+    stats.setMode(0);
 
-    // align top-left
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.left = '0px';
     stats.domElement.style.top = '0px';
 
     document.body.appendChild( stats.domElement );
   }
-//  initStats();
+  initStats();
+
 
   var Slide = function ( d ) {
     var $slide = $( templates.slide( { d: d } ) );
@@ -52,12 +60,11 @@
 
   function init() {
     var aspect = window.innerWidth / window.innerHeight;
+    var dist = isoCamDist;
 
     camera = new THREE.PerspectiveCamera( 75, aspect, 1, 5000 );
     camera.position.y = 25;
     
-    var dist = 100;
-
     cameraB = new THREE.OrthographicCamera( -dist * aspect, dist * aspect, dist, -dist, 1, 1000 );
     cameraB.position.set( dist, dist, dist );
 
@@ -66,17 +73,18 @@
     } );
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
-    document.getElementById( 'container' ).appendChild( renderer.domElement );
+    var el = renderer.domElement;
+    document.getElementById( 'container' ).appendChild( el );
 
     cssRenderer = new THREE.CSS3DRenderer();
     cssRenderer.setSize( window.innerWidth, window.innerHeight );
-    cssRenderer.domElement.style.position = 'absolute';
-    cssRenderer.domElement.style.top = 0;
-    document.getElementById( 'cssContainer' ).appendChild( cssRenderer.domElement );
+    var cssEl = cssRenderer.domElement;
+    cssEl.style.position = 'absolute';
+    cssEl.style.top = 0;
+    document.getElementById( 'cssContainer' ).appendChild( cssEl );
 
     cssScene = new THREE.Scene();
 
-    // NOTE: no mousewheel support for now
     document.body.addEventListener( 'mousewheel', onMouseWheel, false );
 
     window.addEventListener( 'resize', onWindowResize, false );
@@ -84,45 +92,41 @@
     $input.find( 'form' ).on( 'submit', function (evt) {
       evt.preventDefault();
 
-      var field = evt.target[0];
+      $searchField.blur();
 
-      search( field.value );
-
-      field.blur();
+      search( $searchField.val() );
     });
 
-    var $serachField = $input.find( 'input' );
-
-    $serachField.on( 'focus blur', function ( evt ) {
+    $searchField.on( 'focus blur', function ( evt ) {
       auto = ( evt.type === 'blur' );
       $input.toggleClass( 'expanded', !auto );
       
       if ( evt.type === 'focus' ) {
-        $serachField.val( '' );
+        $searchField.val( '' );
       }
     });
 
-    initPreloader();
+    initCube();
   }
 
 
-  function initPreloader() {
-    preloaderScene = new THREE.Scene();
+  function initCube() {
+    cubeScene = new THREE.Scene();
 
     var geometry = new THREE.BoxGeometry( 25, 25, 25 );
-    var mesh = preloaderMesh = new THREE.Mesh( geometry );
+    var mesh = cubeMesh = new THREE.Mesh( geometry );
     mesh.visible = false;
     
-    var helper = preloaderMeshHelper = new THREE.BoxHelper( preloaderMesh );
+    var helper = cubeMeshHelper = new THREE.BoxHelper( cubeMesh );
     helper.material.color.set( 'white' );
     helper.material.linewidth = 2;
     helper.material.linecap = 'round';
     helper.material.linejoin = 'miter';
 
-    preloaderScene.add( mesh );
-    preloaderScene.add( helper );
+    cubeScene.add( mesh );
+    cubeScene.add( helper );
 
-    cameraB.lookAt( preloaderScene.position );
+    cameraB.lookAt( cubeScene.position );
   }
 
 
@@ -150,9 +154,23 @@
 
   function search(term) {
     run(term);
+    console.log(window.statements);
 
+/*
+    var data = window.statements;
+    data.push({ text: 'hello world this is the first slide '});
+    data.push({ text: 'this is the second slide '});
+    data.push({ text: 'this is the third slide '});
+    data.push({ text: 'this is the 4th slide '});
+    data.push({ text: 'this is the 5th slide '});
+    data.push({ text: 'this is the 6th slide '});
+    data.push({ text: 'this is the 7th slide '});
+    data.push({ text: 'this is the 8th slide '});
+    data.push({ text: 'this is the 9th slide '});
+    data.push({ text: 'this is the 10th slide '});
+*/
 //TODO: fix for now
-    restart();
+    load();
   }
 
 
@@ -161,7 +179,9 @@
       return ( !( 'loaded' in d ) || !d.loaded );
     });
 
-    if (!data.length) { return; }
+    if (!data.length) {
+      return setTimeout(load, 3e3);
+    }
 
       // load next three slices
     onLoad( data.slice(0, 3) );
@@ -169,26 +189,46 @@
     
 
   function onLoad( data ) {
-    if (data && voice) {
+    if (voice && data) {
       preloadTTS( data, 0 );
     }
+
+    var slides = cssScene.children;
     
-    _.each( data, function( d ) {
+    _.each( data, function ( d ) {
       d.loaded = true;
       var object = new Slide( d );
 
-      var lastObject = _.last( cssScene.children );
+      var lastObject = _.last( slides );
       var lastZ = ( lastObject ) ? lastObject.position.z : 0;
 
       object.position.z = lastZ - 1000;
       cssScene.add( object );
     } );
+
+
+    var camZ = camera.position.z;
+    var pastSlides = _.sortBy(
+      _.filter(slides, function(object) {
+        return (object.position.z > camZ);
+      }),
+      function(d) {
+        return d.position.z;
+      }
+    ).reverse();
+
+    _.each(
+      pastSlides.slice( 0, Math.max( 0,  pastSlides.length - history ) ), 
+      function ( object ) {
+        minZ = object.position.z;
+        cssScene.remove( object );
+      }
+    );
   }
 
 
   function restart() {
     auto = true;
-    camera.position.z = 0;
   }
 
 
@@ -208,7 +248,7 @@
     var camZ = camera.position.z;
     var newZ = camZ + delta;
     var focalZ = newZ - focal;
-    var left = false;
+    var left = 0;
 
     _.each( cssScene.children, function( object, i ) {
       var el = object.element;
@@ -223,7 +263,7 @@
           dist *= 3;
         }
         opacity = Math.max( 0, 1 - Math.abs( dist / ( focal * 2 ) ) );
-        left = true;
+        left++;
 
         var bgImage = (object.d.image && delta < focal * 3) ?
           'url('+object.d.image+')' : 'none';
@@ -241,12 +281,15 @@
 
       if (el.style.opacity !== newOpacity) {
         el.style.opacity = newOpacity;
-        el.style.display = ( newOpacity ) ? 'flex' : 'none';
+        el.style.display = ( newOpacity ) ? '' : 'none';
       }
     });
 
-    if (left) {
-      camera.position.z = Math.min( 0, newZ );
+    if (left > 0) {
+      camera.position.z = Math.min( minZ, newZ );
+      if (left < 2) {
+        load();
+      }
     }
     else {
       auto = true;
@@ -264,12 +307,14 @@
   function onWindowResize() {
     var width = window.innerWidth;
     var height = window.innerHeight;
+    var dist = isoCamDist;
 
     aspect = width / height;
     camera.aspect = aspect;
     camera.updateProjectionMatrix();
 
-    cameraB.aspect = aspect;
+    cameraB.left = -dist * aspect;
+    cameraB.right = dist * aspect;
     cameraB.updateProjectionMatrix();
 
     renderer.setSize( width, height );
@@ -284,26 +329,27 @@
       move( -2 );
     }
 
-    preloaderMesh.rotation.x += 0.005;
-    preloaderMesh.rotation.y += 0.01;
+    cubeMesh.rotation.x += 0.005;
+    cubeMesh.rotation.y += 0.01;
 
     render();
   }
 
   function render() {
-    renderer.render( preloaderScene, cameraB );
+    renderer.render( cubeScene, cameraB );
     cssRenderer.render( cssScene, camera );
 
-//    stats.update();
+    if (stats) {
+      stats.update();
+    }
   }
 
   init();
   animate();
-  
-  setInterval(load, 5e3);
+  load();
 
-  setTimeout(function(){
-    $input.find('input').focus();
-  },200);
+  setTimeout(function() {
+    $searchField.focus();
+  }, 400);
 
 })();
