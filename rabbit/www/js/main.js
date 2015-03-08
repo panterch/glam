@@ -135,7 +135,7 @@
     var datum = data[i];
 
     datum && $.ajax({
-      url: 'http://numbers.korny.cc/tts.php',
+      url: 'http://numbers.nihil.cc/tts.php',
         data: {
           s: 'sonid15',
           v: _.sample(['Andreas', 'Jonas', 'Julia', 'Klaus', 'Lea', 'Sarah']),
